@@ -878,9 +878,12 @@
                     <button class="btn-calc" style="flex: 2; margin-top: 0;" id="btnTimerStart" onclick="startTimer()">🚀 开始计时</button>
                     <button class="btn-calc btn-secondary" style="flex: 1; margin-top: 0;" onclick="addPlannedTask()">📅 加入计划</button>
                 </div>
-                <div id="timerActiveBtns" style="display: none; gap: 12px; align-items: stretch;">
-                    <button class="btn-calc btn-secondary" id="btnTimerPause" style="flex: 1; margin-top: 0;" onclick="toggleTimerPause()">⏸️ 暂停</button>
-                    <button class="btn-calc btn-danger" style="flex: 1; margin-top: 0;" onclick="stopTimer()">⏹️ 结束并保存</button>
+                <div id="timerActiveBtns" style="display: none; gap: 12px; align-items: stretch; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 12px; width: 100%;">
+                        <button class="btn-calc btn-secondary" id="btnTimerPause" style="flex: 1; margin-top: 0;" onclick="toggleTimerPause()">⏸️ 暂停</button>
+                        <button class="btn-calc btn-danger" style="flex: 1; margin-top: 0;" onclick="stopTimer()">⏹️ 结束并保存</button>
+                    </div>
+                    <button class="btn-calc btn-secondary" style="width: 100%; margin-top: 8px;" onclick="addPlannedTaskWhileRunning()">📅 添加其他计划</button>
                 </div>
             </div>
         </div>
@@ -2297,14 +2300,56 @@
         plannedTasks.push(plan);
         localStorage.setItem('habit_planned_tasks_v1', JSON.stringify(plannedTasks));
         
-        // 清空输入框
-        document.getElementById('timerTaskName').value = '';
-        document.getElementById('timerNote').value = '';
-        initTimerTime();
-        document.getElementById('timerPlannedEndTime').value = '';
+        // 清空输入框（仅在空闲时）
+        if (!timerRunning) {
+            document.getElementById('timerTaskName').value = '';
+            document.getElementById('timerNote').value = '';
+            initTimerTime();
+            document.getElementById('timerPlannedEndTime').value = '';
+        }
         
         renderPlannedTasks();
         triggerAutoSave();
+        
+        if (timerRunning) {
+            alert("✅ 计划已添加！当前计时任务不受影响。");
+        }
+    }
+    
+    // 计时器运行时添加计划任务（使用简单对话框）
+    function addPlannedTaskWhileRunning() {
+        const taskName = prompt("📝 请输入新计划的任务名称：");
+        if (!taskName || !taskName.trim()) return;
+        
+        const plannedTime = prompt("⏰ 计划开始时间（格式 HH:MM，可留空）：", "");
+        const plannedEndTime = prompt("⏰ 计划结束时间（格式 HH:MM，可留空）：", "");
+        const note = prompt("📋 备注（可留空）：", "") || '';
+        
+        // 验证时间格式（如果填写了）
+        if (plannedTime && plannedTime.trim() && !/^\d{1,2}:\d{2}$/.test(plannedTime.trim())) {
+            alert("❌ 开始时间格式不正确，应为 HH:MM");
+            return;
+        }
+        if (plannedEndTime && plannedEndTime.trim() && !/^\d{1,2}:\d{2}$/.test(plannedEndTime.trim())) {
+            alert("❌ 结束时间格式不正确，应为 HH:MM");
+            return;
+        }
+        
+        const plan = {
+            id: Date.now(),
+            name: taskName.trim(),
+            note: note.trim(),
+            plannedTime: (plannedTime || '').trim(),
+            plannedEndTime: (plannedEndTime || '').trim()
+        };
+        
+        plannedTasks.push(plan);
+        localStorage.setItem('habit_planned_tasks_v1', JSON.stringify(plannedTasks));
+        
+        renderPlannedTasks();
+        triggerAutoSave();
+        
+        alert(`✅ 计划「${taskName.trim()}」已添加！\n\n当前计时任务「${document.getElementById('timerTaskName').value}」继续运行中。`);
     }
 
     function renderPlannedTasks() {
