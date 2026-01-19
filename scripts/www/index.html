@@ -378,6 +378,15 @@
 
         .close-pending { position: absolute; top: 12px; right: 12px; color: var(--text-sub); opacity: 0.5; cursor: pointer; font-weight: bold; }
         .close-pending:hover { opacity: 1; }
+        
+        /* 待办选择弹窗样式 */
+        #todoSelectModal > div {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
 
         .todo-date-badge {
             font-size: 10px; padding: 2px 6px; border-radius: 6px;
@@ -404,7 +413,7 @@
         }
     </style>
 </head>
-<body onclick="closeAllMenus(event)">
+<body onclick="if(event.target.id === 'todoSelectModal') closeTodoSelectModal(); else closeAllMenus(event);">
 
     <div class="header">
         <div class="header-left">
@@ -747,6 +756,10 @@
                     <button class="btn-mini" onclick="addQuickTask()">➕</button>
                 </div>
             </div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">
+                <div style="font-size:11px;color:var(--text-sub);margin-bottom:8px;">💡 提示：快选项会按使用频次自动排序，常用的排在前面</div>
+                <button class="btn-mini btn-secondary" style="width:100%;" onclick="resetTaskUsage()">🔄 重置所有使用频次</button>
+            </div>
         </div>
 
         <div class="card">
@@ -826,6 +839,19 @@
             <div class="input-group">
                 <label class="input-label">任务名称</label>
                 <input type="text" id="timerTaskName" placeholder="现在想专注做什么？">
+                <!-- 快选胶囊 -->
+                <div id="quickTasksContainer" class="chips-container" style="margin-top: 8px;"></div>
+            </div>
+            
+            <!-- 待办选择弹窗 -->
+            <div id="todoSelectModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+                <div style="background:var(--bg-card); border-radius:20px; padding:24px; max-width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3); border:1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <div style="font-weight:800; font-size:18px; color:var(--text-main);">📋 选择待办事项</div>
+                        <div class="btn-action" onclick="closeTodoSelectModal()" style="width:32px; height:32px; font-size:18px;">✕</div>
+                    </div>
+                    <div id="todoSelectList" style="max-height:60vh; overflow-y:auto;"></div>
+                </div>
             </div>
 
             <div class="row">
@@ -842,9 +868,6 @@
                 <label class="input-label">备注</label>
                 <textarea id="timerNote" placeholder="记下点什么..." rows="1" style="min-height: 46px;"></textarea>
             </div>
-            
-            <!-- 快选胶囊 -->
-            <div id="quickTasksContainer" class="chips-container" style="margin-bottom: 20px;"></div>
 
             <div id="activeTimerDisplay" style="text-align: center; margin: 20px 0;">
                 <div id="timerClock" style="font-size: 48px; font-weight: 800; font-family: monospace; color: var(--primary);">00:00:00</div>
@@ -940,6 +963,12 @@
 
     let historyData = safeParse('habit_data_v15', []);
     let config = safeParse('habit_config_v7', DEFAULT_CONFIG);
+    
+    // 确保配置中包含快捷任务（向后兼容）
+    if (!config.quickTasks || config.quickTasks.length === 0) {
+        config.quickTasks = DEFAULT_CONFIG.quickTasks;
+    }
+    
     let wishList = safeParse('habit_wishes_v1', []);
     let todoList = safeParse('habit_todos_v1', []);
     let userStrategies = safeParse('habit_strategies_v1', { study: ["⚡ 番茄钟"], sleep: ["📵 远离屏幕"], wake: ["⏰ 闹钟放远"] });
@@ -959,6 +988,7 @@
     let pinnedTaskId = localStorage.getItem('habit_pinned_task_id') || null;
     let globalWallet = 0, globalDebt = 0;
     let dailyReviews = safeParse('habit_daily_reviews_v1', {});
+    let taskUsageCount = safeParse('habit_task_usage_v1', {}); // 任务使用频次统计
     let expiredFullView = false;
     let timerFullView = false;
     let historyFullView = false;
@@ -988,7 +1018,10 @@
 
         if(id==='stats' && typeof renderStats === 'function') renderStats();
         if(id==='shop' && typeof renderShop === 'function') renderShop();
-        if(id==='settings' && typeof applySettingsToUI === 'function') applySettingsToUI();
+        if(id==='settings') { 
+            if (typeof applySettingsToUI === 'function') applySettingsToUI();
+            if (typeof renderQuickTaskSettings === 'function') renderQuickTaskSettings();
+        }
         if(id==='timer') { 
             if (typeof renderPlannedTasks === 'function') renderPlannedTasks(); 
             if (typeof renderTimerHistory === 'function') renderTimerHistory(); 
@@ -1042,6 +1075,7 @@
         localStorage.setItem('habit_timer_records_v1', JSON.stringify(timerRecords));
         localStorage.setItem('habit_planned_tasks_v1', JSON.stringify(plannedTasks));
         localStorage.setItem('habit_daily_reviews_v1', JSON.stringify(dailyReviews));
+        localStorage.setItem('habit_task_usage_v1', JSON.stringify(taskUsageCount));
     }
 
     function setSyncBadgeStatus(status, text) {
@@ -1079,6 +1113,7 @@
         initTimerTime();
         checkWeekend(); applySettingsToUI();
         renderStrategySettings();
+        renderQuickTaskSettings(); // 初始化快捷任务设置显示
         if(ghConfig.token && ghConfig.repo) { document.getElementById('ghToken').value = ghConfig.token; document.getElementById('ghRepo').value = ghConfig.repo; }
         checkDateChange();
         updateUI();
@@ -1511,6 +1546,7 @@
         }
 
         renderTodos();
+        if (typeof renderQuickTasks === 'function') renderQuickTasks(); // 更新计时页面的快选胶囊
         triggerAutoSave();
         cancelEdit();
     }
@@ -1581,7 +1617,12 @@
         localStorage.setItem('habit_todos_v1', JSON.stringify(todoList));
         const el = document.getElementById(`todo-row-${id}`);
         if(el) el.remove();
-        setTimeout(() => { renderTodos(); triggerAutoSave(); isDeleting = false; }, 300);
+        setTimeout(() => { 
+            renderTodos(); 
+            if (typeof renderQuickTasks === 'function') renderQuickTasks(); // 更新计时页面的快选胶囊
+            triggerAutoSave(); 
+            isDeleting = false; 
+        }, 300);
     }
 
     function finishTodoWithAnim(id, result) {
@@ -1607,6 +1648,7 @@
         displayTitle = (t.type==='do'?'🟢':(t.type==='dont'?'🔴':'🔵')) + ' ' + t.title;
         saveRecord({ fund, title: displayTitle, theme, details:{type:'Todo结算', result, recordType} }, false);
         renderTodos();
+        if (typeof renderQuickTasks === 'function') renderQuickTasks(); // 更新计时页面的快选胶囊
     }
 
     function autoCheckTodos() {
@@ -1627,7 +1669,12 @@
                 }
             }
         });
-        if (changed) { renderTodos(); updateUI(); triggerAutoSave(); }
+        if (changed) { 
+            renderTodos(); 
+            updateUI(); 
+            if (typeof renderQuickTasks === 'function') renderQuickTasks(); // 更新计时页面的快选胶囊
+            triggerAutoSave(); 
+        }
     }
 
     function toggleShopPrivacy() {
@@ -2060,6 +2107,44 @@
 
     function quickSelectTask(name) {
         document.getElementById('timerTaskName').value = name;
+        
+        // 统计使用频次
+        if (!taskUsageCount[name]) taskUsageCount[name] = 0;
+        taskUsageCount[name]++;
+        localStorage.setItem('habit_task_usage_v1', JSON.stringify(taskUsageCount));
+        
+        // 重新渲染以更新排序
+        renderQuickTasks();
+    }
+
+    function selectTodoForTimer(todoId) {
+        // 确保能处理字符串和数字类型的ID
+        const id = typeof todoId === 'string' ? todoId : String(todoId);
+        const todo = todoList.find(t => String(t.id) === id);
+        if (!todo) {
+            console.warn('待办未找到:', todoId);
+            return;
+        }
+        
+        // 设置任务名称
+        const taskNameInput = document.getElementById('timerTaskName');
+        if (taskNameInput) {
+            taskNameInput.value = todo.title;
+            // 在任务名称输入框上存储todoId，方便结束时识别
+            taskNameInput.setAttribute('data-todo-id', id);
+        }
+        
+        // 设置结束时间（如果待办有截止时间）
+        if (todo.time) {
+            const endTimeInput = document.getElementById('timerPlannedEndTime');
+            if (endTimeInput) endTimeInput.value = todo.time;
+        }
+        
+        // 如果有备注，也可以填充到备注框
+        if (todo.note) {
+            const noteInput = document.getElementById('timerNote');
+            if (noteInput) noteInput.value = todo.note;
+        }
     }
 
     function addPlannedTask() {
@@ -2494,6 +2579,8 @@
         const note = document.getElementById('timerNote').value;
         const endTime = new Date().toTimeString().slice(0, 5);
         const startTime = calculateStartTime(endTime, hours);
+        const taskInput = document.getElementById('timerTaskName');
+        const todoId = taskInput.getAttribute('data-todo-id');
 
         // 保存记录
         const record = {
@@ -2505,7 +2592,8 @@
             date: getLocalTodayStr(),
             startTime: startTime,
             time: endTime,
-            isPlanned: isTimerFromPlan
+            isPlanned: isTimerFromPlan,
+            todoId: todoId ? parseInt(todoId) : null // 记录关联的待办ID
         };
         
         timerRecords.unshift(record);
@@ -2513,12 +2601,27 @@
         // 持久化
         localStorage.setItem('habit_timer_records_v1', JSON.stringify(timerRecords));
         
+        // 检查是否有关联的待办事项，提醒用户完成
+        if (todoId) {
+            const id = String(todoId);
+            const todo = todoList.find(t => String(t.id) === id && t.status === 'pending');
+            if (todo) {
+                const reward = todo.reward || 0;
+                const penalty = todo.penalty || 0;
+                const message = `✅ 计时已结束！\n\n是否同时完成待办事项「${todo.title}」？\n\n完成将获得 +${reward} 元愿望金`;
+                if (confirm(message)) {
+                    finishTodo(id, 'success');
+                }
+            }
+        }
+        
         // 重置UI
         timerSeconds = 0;
         timerRunning = false;
         isTimerFromPlan = false; // 重置标志
         updateTimerUI();
         document.getElementById('timerTaskName').value = '';
+        document.getElementById('timerTaskName').removeAttribute('data-todo-id'); // 清除关联
         document.getElementById('timerNote').value = '';
         initTimerTime();
         
@@ -2530,6 +2633,7 @@
         updateStickyNotif(); // 结束时移除计时通知
 
         renderTimerHistory();
+        renderQuickTasks(); // 刷新快选胶囊（因为待办可能已完成）
         updateUI();
         triggerAutoSave();
     }
@@ -2756,7 +2860,7 @@
     }
 
     function exportJSON() {
-        const backup = { history: historyData, config: config, todos: todoList, wishes: wishList, strategies: userStrategies, gh: ghConfig, timeBank: timeBank, dailyReviews: dailyReviews };
+        const backup = { history: historyData, config: config, todos: todoList, wishes: wishList, strategies: userStrategies, gh: ghConfig, timeBank: timeBank, dailyReviews: dailyReviews, taskUsageCount: taskUsageCount };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
@@ -2789,6 +2893,7 @@
             if(data.gh) localStorage.setItem('habit_gh_v1', JSON.stringify(data.gh));
             if(data.timeBank !== undefined) localStorage.setItem('habit_time_bank_v1', data.timeBank);
             if(data.dailyReviews) localStorage.setItem('habit_daily_reviews_v1', JSON.stringify(data.dailyReviews));
+            if(data.taskUsageCount) localStorage.setItem('habit_task_usage_v1', JSON.stringify(data.taskUsageCount));
             alert("✅ 数据恢复成功！页面即将刷新..."); location.reload();
         }
     }
@@ -2877,15 +2982,131 @@
     function renderQuickTasks() {
         const container = document.getElementById('quickTasksContainer');
         if (!container) return;
-        const tasks = config.quickTasks || [];
-        container.innerHTML = tasks.map(t => `<div class="chip" onclick="quickSelectTask('${t}')">${t}</div>`).join('');
+        
+        // 获取预设快捷任务
+        let tasks = config.quickTasks || [];
+        
+        // 获取今日待办事项（仅"去做"类型，未完成的）
+        const todayStr = getLocalTodayStr();
+        const todayTodos = todoList.filter(t => 
+            t.type === 'do' && 
+            t.status === 'pending' && 
+            t.date === todayStr &&
+            !t.archived
+        );
+        
+        // 合并任务列表（不再包含待办，待办通过固定按钮选择）
+        const allTasks = tasks.map(t => ({ name: t, isTodo: false }));
+        
+        // 为非待办任务添加使用频次并排序
+        allTasks.forEach(task => {
+            if (!task.isTodo) {
+                task.count = taskUsageCount[task.name] || 0;
+            }
+        });
+        
+        allTasks.sort((a, b) => b.count - a.count);
+        
+        container.style.display = 'flex';
+        container.style.flexWrap = 'wrap';
+        container.style.gap = '8px';
+        
+        // 首先添加固定的"待办"按钮
+        let html = `<div class="chip" style="background:var(--success-bg);border-color:var(--success);color:var(--success);font-weight:700;cursor:pointer;" onclick="showTodoSelectModal()">📋 待办</div>`;
+        
+        // 然后添加其他快捷任务
+        if (allTasks.length > 0) {
+            html += allTasks.map(task => {
+                return `<div class="chip" onclick="quickSelectTask('${task.name.replace(/'/g, "\\'")}')">${task.name}</div>`;
+            }).join('');
+        } else {
+            html += '<div style="text-align:center;color:var(--text-sub);font-size:11px;padding:8px;width:100%;">暂无快选项，去设置中添加吧</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    function showTodoSelectModal() {
+        const modal = document.getElementById('todoSelectModal');
+        const list = document.getElementById('todoSelectList');
+        if (!modal || !list) return;
+        
+        const todayStr = getLocalTodayStr();
+        const now = new Date();
+        const currentHm = now.toTimeString().slice(0, 5);
+        
+        // 获取所有未完成的待办（包括今日和未来的）
+        const availableTodos = todoList.filter(t => {
+            if (t.archived) return false;
+            if (t.status !== 'pending') return false;
+            if (t.date < todayStr) return false;
+            if (t.date === todayStr && t.time && currentHm > t.time) return false;
+            return true;
+        });
+        
+        if (availableTodos.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:var(--text-sub);padding:30px;">暂无可用待办事项</div>';
+        } else {
+            // 按日期和时间排序
+            availableTodos.sort((a, b) => {
+                if (a.date !== b.date) return a.date.localeCompare(b.date);
+                return (a.time || '99:99').localeCompare(b.time || '99:99');
+            });
+            
+            list.innerHTML = availableTodos.map(t => {
+                const dateBadge = t.date > todayStr ? `<span style="font-size:10px;color:var(--text-sub);background:var(--border);padding:2px 6px;border-radius:4px;margin-left:6px;">${t.date.slice(5)}</span>` : '';
+                const timeBadge = t.time ? `<span style="font-size:10px;color:var(--text-sub);background:var(--border);padding:2px 6px;border-radius:4px;margin-left:6px;">${t.time}</span>` : '';
+                const importance = t.importance || 1;
+                const importanceColors = { 3: 'var(--danger)', 2: 'var(--warning)', 1: 'var(--success)' };
+                const importanceDot = `<span style="width:10px; height:10px; border-radius:50%; background:${importanceColors[importance]}; display:inline-block; margin-right:4px;"></span>`;
+                
+                return `
+                    <div class="list-item" style="cursor:pointer; margin-bottom:8px;" onclick="selectTodoFromModal('${String(t.id)}')">
+                        <div style="flex:1;">
+                            <div style="font-weight:700; color:var(--text-main); display:flex; align-items:center;">
+                                ${importanceDot}${t.title} ${timeBadge} ${dateBadge}
+                            </div>
+                            ${t.note ? `<div style="font-size:11px;color:var(--text-sub);margin-top:4px;">${t.note}</div>` : ''}
+                            <div style="font-size:11px;color:var(--text-sub);margin-top:4px;">奖${t.reward || 0} / 罚${t.penalty || 0}</div>
+                        </div>
+                        <div style="color:var(--success); font-size:20px;">✓</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        modal.style.display = 'flex';
+    }
+    
+    function closeTodoSelectModal() {
+        const modal = document.getElementById('todoSelectModal');
+        if (modal) modal.style.display = 'none';
+    }
+    
+    function selectTodoFromModal(todoId) {
+        // 确保todoId是字符串或数字都能处理
+        const id = typeof todoId === 'string' ? todoId : String(todoId);
+        selectTodoForTimer(id);
+        closeTodoSelectModal();
     }
 
     function renderQuickTaskSettings() {
         const list = document.getElementById('setQuickTasksList');
         if (!list) return;
-        const tasks = config.quickTasks || [];
-        list.innerHTML = tasks.map((t, idx) => `<div class="chip chip-removable" onclick="removeQuickTask(${idx})">${t}</div>`).join('');
+        
+        // 创建任务数组并附加使用频次信息
+        let tasks = (config.quickTasks || []).map((t, idx) => ({
+            name: t,
+            index: idx,
+            count: taskUsageCount[t] || 0
+        }));
+        
+        // 按使用频次排序
+        tasks.sort((a, b) => b.count - a.count);
+        
+        list.innerHTML = tasks.map(t => {
+            return `<div class="chip chip-removable" onclick="removeQuickTask(${t.index})">${t.name}</div>`;
+        }).join('');
     }
 
     function addQuickTask() {
@@ -2902,9 +3123,28 @@
 
     function removeQuickTask(idx) {
         if(!confirm(`删除此快捷项?`)) return;
+        const removedTask = config.quickTasks[idx];
         config.quickTasks.splice(idx, 1);
+        
+        // 同时删除该任务的使用频次记录
+        if (taskUsageCount[removedTask]) {
+            delete taskUsageCount[removedTask];
+            localStorage.setItem('habit_task_usage_v1', JSON.stringify(taskUsageCount));
+        }
+        
         localStorage.setItem('habit_config_v7', JSON.stringify(config));
         renderQuickTaskSettings();
+        renderQuickTasks();
+        triggerAutoSave();
+    }
+
+    function resetTaskUsage() {
+        if(!confirm('确定要重置所有任务的使用频次统计吗？')) return;
+        taskUsageCount = {};
+        localStorage.setItem('habit_task_usage_v1', JSON.stringify(taskUsageCount));
+        renderQuickTasks();
+        renderQuickTaskSettings();
+        alert('✅ 使用频次已重置');
         triggerAutoSave();
     }
 
@@ -3020,6 +3260,7 @@
                     if(cloudData.timerRecords) timerRecords = cloudData.timerRecords;
                     if(cloudData.plannedTasks) plannedTasks = cloudData.plannedTasks;
                     if(cloudData.dailyReviews) dailyReviews = cloudData.dailyReviews;
+                    if(cloudData.taskUsageCount) taskUsageCount = cloudData.taskUsageCount;
                     if(cloudData.pinnedTaskId) {
                         pinnedTaskId = cloudData.pinnedTaskId;
                         localStorage.setItem('habit_pinned_task_id', pinnedTaskId);
@@ -3053,6 +3294,7 @@
                     timerRecords: timerRecords,
                     plannedTasks: plannedTasks,
                     dailyReviews: dailyReviews,
+                    taskUsageCount: taskUsageCount,
                     pinnedTaskId: pinnedTaskId
                 };
 
@@ -3099,6 +3341,7 @@
                 timerRecords: timerRecords,
                 plannedTasks: plannedTasks,
                 dailyReviews: dailyReviews,
+                taskUsageCount: taskUsageCount,
                 pinnedTaskId: pinnedTaskId
             };
             const body = { message: `Archive ${timestamp}`, content: btoa(unescape(encodeURIComponent(JSON.stringify(content)))) };
