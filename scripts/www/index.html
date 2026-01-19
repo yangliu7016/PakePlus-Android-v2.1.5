@@ -1048,7 +1048,138 @@
     let timerPaused = false;
     let timerSeconds = 0;
     let timerInterval = null;
+    let timerSyncInterval = null; // 用于定期同步计时器状态
     let isTimerFromPlan = false; // 记录当前计时是否来自计划清单
+    
+    // 保存当前计时器状态到localStorage
+    function saveTimerState() {
+        if (!timerRunning) {
+            localStorage.removeItem('habit_timer_state_v1');
+            return;
+        }
+        
+        // 尝试获取已存在的startTimestamp，如果没有则计算新的
+        let startTimestamp;
+        const existingState = localStorage.getItem('habit_timer_state_v1');
+        if (existingState) {
+            try {
+                const parsed = JSON.parse(existingState);
+                startTimestamp = parsed.startTimestamp || (Date.now() - (timerSeconds * 1000));
+            } catch (e) {
+                startTimestamp = Date.now() - (timerSeconds * 1000);
+            }
+        } else {
+            startTimestamp = Date.now() - (timerSeconds * 1000);
+        }
+        
+        const timerState = {
+            running: timerRunning,
+            paused: timerPaused,
+            seconds: timerSeconds,
+            taskName: document.getElementById('timerTaskName').value || '',
+            note: document.getElementById('timerNote').value || '',
+            todoId: document.getElementById('timerTaskName').getAttribute('data-todo-id') || null,
+            fromPlan: isTimerFromPlan,
+            lastUpdate: Date.now(),
+            startTimestamp: startTimestamp // 保持原有的开始时间戳
+        };
+        localStorage.setItem('habit_timer_state_v1', JSON.stringify(timerState));
+    }
+    
+    // 从localStorage恢复计时器状态
+    function restoreTimerState() {
+        // 先清理现有的计时器
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        if (timerSyncInterval) {
+            clearInterval(timerSyncInterval);
+            timerSyncInterval = null;
+        }
+        
+        const saved = localStorage.getItem('habit_timer_state_v1');
+        if (!saved) {
+            // 如果没有保存的状态，确保UI处于空闲状态
+            timerRunning = false;
+            timerPaused = false;
+            timerSeconds = 0;
+            const idleBtns = document.getElementById('timerIdleBtns');
+            const activeBtns = document.getElementById('timerActiveBtns');
+            if (idleBtns) idleBtns.style.display = 'flex';
+            if (activeBtns) activeBtns.style.display = 'none';
+            return;
+        }
+        
+        try {
+            const state = JSON.parse(saved);
+            const now = Date.now();
+            
+            // 只恢复24小时内的计时状态，避免恢复过旧的状态
+            if (!state.running || now - state.lastUpdate > 24 * 60 * 60 * 1000) {
+                localStorage.removeItem('habit_timer_state_v1');
+                return;
+            }
+            
+            // 如果计时器没有暂停，根据开始时间戳计算实际已经过去的秒数
+            if (!state.paused && state.startTimestamp) {
+                const elapsedMs = now - state.startTimestamp;
+                timerSeconds = Math.floor(elapsedMs / 1000);
+            } else {
+                // 如果暂停了，就使用保存的秒数
+                timerSeconds = state.seconds || 0;
+            }
+            
+            timerRunning = state.running;
+            timerPaused = state.paused || false;
+            isTimerFromPlan = state.fromPlan || false;
+            
+            // 恢复UI
+            const taskNameInput = document.getElementById('timerTaskName');
+            const noteInput = document.getElementById('timerNote');
+            
+            if (taskNameInput) taskNameInput.value = state.taskName || '';
+            if (noteInput) noteInput.value = state.note || '';
+            if (state.todoId && taskNameInput) taskNameInput.setAttribute('data-todo-id', state.todoId);
+            
+            // 重新启动计时器
+            if (timerRunning) {
+                const idleBtns = document.getElementById('timerIdleBtns');
+                const activeBtns = document.getElementById('timerActiveBtns');
+                if (idleBtns) idleBtns.style.display = 'none';
+                if (activeBtns) activeBtns.style.display = 'flex';
+                
+                const pauseBtn = document.getElementById('btnTimerPause');
+                if (pauseBtn) {
+                    pauseBtn.innerText = timerPaused ? '▶️ 继续' : '⏸️ 暂停';
+                }
+                
+                updateTimerUI();
+                updateStickyNotif();
+                
+                timerInterval = setInterval(() => {
+                    if (!timerPaused) {
+                        timerSeconds++;
+                        updateTimerUI();
+                        saveTimerState(); // 每秒保存一次状态到本地
+                    }
+                }, 1000);
+                
+                // 恢复后也启动定期同步
+                timerSyncInterval = setInterval(() => {
+                    if (timerRunning) {
+                        console.log('🔄 定期同步计时器状态到云端...');
+                        triggerAutoSave();
+                    }
+                }, 30000); // 30秒
+                
+                console.log('✅ 已恢复计时器状态:', state.taskName, '已计时', Math.floor(timerSeconds / 60), '分钟');
+            }
+        } catch (e) {
+            console.error('恢复计时器状态失败:', e);
+            localStorage.removeItem('habit_timer_state_v1');
+        }
+    }
 
     /* ================== ✅ 同步修复：剥离图片字段（仅用于云端/拉取写入） ================== */
     function stripImagesFromHistory(arr) {
@@ -1116,6 +1247,7 @@
         renderQuickTaskSettings(); // 初始化快捷任务设置显示
         if(ghConfig.token && ghConfig.repo) { document.getElementById('ghToken').value = ghConfig.token; document.getElementById('ghRepo').value = ghConfig.repo; }
         checkDateChange();
+        restoreTimerState(); // 恢复正在进行的计时器状态
         updateUI();
         updateStickyNotif(); // 加载时显示可能的置顶任务
 
@@ -1125,7 +1257,7 @@
         setInterval(() => {
             if(!isDeleting) {
                 autoCheckTodos();
-                updateStickyNotif(); // 周期性更新置顶通知（确保“下一计划”随时间自动切换）
+                updateStickyNotif(); // 周期性更新置顶通知（确保"下一计划"随时间自动切换）
             }
         }, 2000);
 
@@ -2544,18 +2676,31 @@
         if (activeBtns) activeBtns.style.display = 'flex';
         
         updateStickyNotif(); // 开启时显示置顶通知
+        saveTimerState(); // 保存计时器状态
+        triggerAutoSave(); // 同步到云端
 
         timerInterval = setInterval(() => {
             if (!timerPaused) {
                 timerSeconds++;
                 updateTimerUI();
+                saveTimerState(); // 每秒保存一次状态到本地
             }
         }, 1000);
+        
+        // 每30秒同步一次到云端，确保多设备能及时获取最新状态
+        timerSyncInterval = setInterval(() => {
+            if (timerRunning) {
+                console.log('🔄 定期同步计时器状态到云端...');
+                triggerAutoSave();
+            }
+        }, 30000); // 30秒
     }
 
     function toggleTimerPause() {
         timerPaused = !timerPaused;
         document.getElementById('btnTimerPause').innerText = timerPaused ? '▶️ 继续' : '⏸️ 暂停';
+        saveTimerState(); // 保存暂停状态
+        triggerAutoSave(); // 同步到云端
     }
 
     function updateTimerUI() {
@@ -2574,6 +2719,7 @@
         if (!confirm("确认结束本次计时并保存？")) return;
         
         clearInterval(timerInterval);
+        clearInterval(timerSyncInterval); // 清除同步定时器
         const hours = timerSeconds / 3600;
         const taskName = document.getElementById('timerTaskName').value;
         const note = document.getElementById('timerNote').value;
@@ -2631,6 +2777,9 @@
         if (activeBtns) activeBtns.style.display = 'none';
         
         updateStickyNotif(); // 结束时移除计时通知
+        
+        // 清除计时器状态
+        localStorage.removeItem('habit_timer_state_v1');
 
         renderTimerHistory();
         renderQuickTasks(); // 刷新快选胶囊（因为待办可能已完成）
@@ -2907,6 +3056,7 @@
         localStorage.setItem('habit_timer_records_v1', JSON.stringify(timerRecords));
         localStorage.setItem('habit_planned_tasks_v1', JSON.stringify(plannedTasks));
         localStorage.setItem('habit_daily_reviews_v1', JSON.stringify(dailyReviews));
+        // 计时器状态已经由saveTimerState()单独保存
         syncGitHub('push', true);
     }
 
@@ -3265,6 +3415,17 @@
                         pinnedTaskId = cloudData.pinnedTaskId;
                         localStorage.setItem('habit_pinned_task_id', pinnedTaskId);
                     }
+                    
+                    // 同步计时器状态
+                    if(cloudData.timerState && cloudData.timerState.running) {
+                        // 如果云端有正在运行的计时器，保存到本地
+                        localStorage.setItem('habit_timer_state_v1', JSON.stringify(cloudData.timerState));
+                        console.log('📥 从云端同步到计时器状态:', cloudData.timerState.taskName);
+                    } else {
+                        // 如果云端没有运行的计时器，清除本地的
+                        localStorage.removeItem('habit_timer_state_v1');
+                        console.log('🧹 清除本地计时器状态（云端无活动计时器）');
+                    }
 
                     if(cloudData.timeBank !== undefined) timeBank = cloudData.timeBank;
 
@@ -3275,6 +3436,9 @@
                     updateUI(); renderTodos(); checkDateChange(); applySettingsToUI(); renderStrategySettings();
                     if (typeof renderTimerHistory === 'function') renderTimerHistory();
                     if (typeof renderPlannedTasks === 'function') renderPlannedTasks();
+                    
+                    // 恢复计时器状态（会自动处理有/无计时器的情况）
+                    restoreTimerState();
                     updateStickyNotif();
 
                     if(!isAuto) alert("✅ 同步成功：已从云端同步所有数据");
@@ -3283,6 +3447,14 @@
                     if(!isAuto) alert("✅ 同步完成：本地数据已是最新");
                 }
             } else {
+                // 获取当前计时器状态
+                const timerStateStr = localStorage.getItem('habit_timer_state_v1');
+                const timerState = timerStateStr ? JSON.parse(timerStateStr) : null;
+                
+                if (timerState && timerState.running) {
+                    console.log('📤 正在上传计时器状态到云端:', timerState.taskName, '已计时', Math.floor(timerState.seconds / 60), '分钟');
+                }
+                
                 const content = {
                     timestamp: Date.now(),
                     data: stripImagesFromHistory(historyData),
@@ -3295,7 +3467,8 @@
                     plannedTasks: plannedTasks,
                     dailyReviews: dailyReviews,
                     taskUsageCount: taskUsageCount,
-                    pinnedTaskId: pinnedTaskId
+                    pinnedTaskId: pinnedTaskId,
+                    timerState: timerState // 包含计时器状态
                 };
 
                 const body = {
