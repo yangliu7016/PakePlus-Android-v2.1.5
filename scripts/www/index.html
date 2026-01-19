@@ -943,7 +943,8 @@
     let wishList = safeParse('habit_wishes_v1', []);
     let todoList = safeParse('habit_todos_v1', []);
     let userStrategies = safeParse('habit_strategies_v1', { study: ["⚡ 番茄钟"], sleep: ["📵 远离屏幕"], wake: ["⏰ 闹钟放远"] });
-    let timeBank = parseFloat(localStorage.getItem('habit_time_bank_v1')) || 0;
+    let timeBank = parseFloat(localStorage.getItem('habit_time_bank_v1'));
+    if (isNaN(timeBank) || timeBank < 0) timeBank = 0;
     let timerRecords = safeParse('habit_timer_records_v1', []);
     let plannedTasks = safeParse('habit_planned_tasks_v1', []);
     let ghConfig = safeParse('habit_gh_v1', { token: '', repo: '', path: 'habit_backup.json' });
@@ -1048,6 +1049,24 @@
         const badgeText = document.getElementById('syncText');
         badge.className = `sync-badge ${status}`;
         if (typeof text === 'string') badgeText.innerText = text;
+    }
+
+    function initTodoTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeStr = `${hours}:${minutes}`;
+        const todoTimeInput = document.getElementById('todoTime');
+        if (todoTimeInput) todoTimeInput.value = timeStr;
+    }
+
+    function initTimerTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeStr = `${hours}:${minutes}`;
+        const timerPlannedTimeInput = document.getElementById('timerPlannedTime');
+        if (timerPlannedTimeInput) timerPlannedTimeInput.value = timeStr;
     }
 
     function init() {
@@ -1694,11 +1713,11 @@
     }
 
     function addWish() {
-        const n = document.getElementById('wishName').value;
+        const n = document.getElementById('wishName').value.trim();
         const c = parseFloat(document.getElementById('wishCost').value);
         const checkbox = document.getElementById('wishHidden');
         const h = checkbox.checked;
-        if(!n || isNaN(c)) return alert("请输入正确的名称和价格");
+        if(!n || !c || c <= 0) return alert("请输入正确的名称和价格");
 
         if (editingWishIndex > -1) {
             wishList[editingWishIndex] = {name:n, cost:c, hidden:h};
@@ -1724,7 +1743,6 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
-            reader.onload = null; // Clean up
             img.onload = function() {
                 const canvas = document.createElement('canvas');
                 let width = img.width, height = img.height;
@@ -1735,6 +1753,10 @@
                 const payAmount = globalDebt;
                 saveRecord({ fund: -payAmount, title: '💸 支付清零', theme: 'theme-pay', details: { image: dataUrl, note: '上传凭证清零' } });
                 alert("✅ 支付凭证已上传，债务已清零！");
+                
+                // 清理内存
+                reader.onload = null;
+                img.onload = null;
             };
             img.src = e.target.result;
         };
@@ -1818,7 +1840,7 @@
         const newFund = parseFloat(document.getElementById(`editItemFund-${id}`).value);
         
         if (!newTitle) return alert("请输入标题");
-        if (isNaN(newFund)) return alert("请输入有效金额");
+        if (newFund === undefined || newFund === null) return alert("请输入有效金额");
 
         record.title = newTitle;
         record.fund = newFund;
@@ -1877,7 +1899,7 @@
         const sleepVal = document.getElementById('sleepInput').value;
         const wakeVal = document.getElementById('wakeInput').value;
 
-        if (isNaN(studyVal) || !sleepVal || !wakeVal) { 
+        if (!studyVal || studyVal < 0 || !sleepVal || !wakeVal) { 
             const card = document.getElementById('analysisCard');
             card.style.display = 'block';
             card.style.textAlign = 'center';
@@ -2588,7 +2610,7 @@
         if (!name) return alert("请输入名称");
 
         const newDuration = getTimeDiff(start, end);
-        if (isNaN(newDuration) || newDuration < 0) return alert("时间设置不合法");
+        if (!newDuration || newDuration < 0) return alert("时间设置不合法");
 
         r.name = name;
         r.startTime = start;
@@ -2892,7 +2914,7 @@
         const newDebt = parseFloat(document.getElementById('adjDebt').value);
         const reason = document.getElementById('adjReason').value.trim();
 
-        if (isNaN(newTimeBank) || isNaN(newWallet) || isNaN(newDebt)) return alert("请输入有效数值");
+        if (newTimeBank === undefined || newTimeBank === null || newWallet === undefined || newWallet === null || newDebt === undefined || newDebt === null) return alert("请输入有效数值");
         if (!reason) return alert("请输入修改原因");
 
         const today = getLocalTodayStr();
