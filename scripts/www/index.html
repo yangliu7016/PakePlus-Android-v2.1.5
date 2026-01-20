@@ -400,6 +400,61 @@
             font-size: 13px; cursor: pointer;
         }
         .backup-file-item:hover { background: var(--input-bg); }
+        
+        /* 自定义模态对话框 */
+        .custom-modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
+            z-index: 10000; align-items: center; justify-content: center;
+        }
+        .custom-modal.show { display: flex; }
+        .modal-content {
+            background: var(--bg-card); border-radius: 16px;
+            width: 90%; max-width: 420px; padding: 24px;
+            box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-title {
+            font-size: 18px; font-weight: 700; margin-bottom: 16px;
+            color: var(--text-main);
+        }
+        .modal-message {
+            font-size: 14px; color: var(--text-sub); margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .modal-buttons {
+            display: flex; gap: 12px; margin-top: 20px;
+        }
+        .modal-btn {
+            flex: 1; padding: 12px; border: none; border-radius: 12px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-btn-primary {
+            background: var(--primary); color: white;
+        }
+        .modal-btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .modal-btn-secondary {
+            background: var(--border); color: var(--text-main);
+        }
+        .modal-btn-secondary:hover { background: var(--input-bg); }
+        .modal-input {
+            width: 100%; padding: 12px; border-radius: 12px;
+            border: 1px solid var(--border); background: var(--input-bg);
+            font-size: 14px; color: var(--text-main);
+            margin-bottom: 12px; box-sizing: border-box;
+        }
+        .modal-input:focus {
+            outline: none; border-color: var(--primary);
+        }
+        .modal-input-label {
+            display: block; font-size: 13px; color: var(--text-sub);
+            margin-bottom: 8px; font-weight: 600;
+        }
 
         /* Time Bank Exchange Card */
         .exchange-card {
@@ -934,6 +989,16 @@
         <div class="tab" onclick="switchPage('settings')"><span class="tab-icon">⚙️</span>设置</div>
     </div>
 
+    <!-- 自定义模态对话框 -->
+    <div id="customModal" class="custom-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">提示</div>
+            <div class="modal-message" id="modalMessage"></div>
+            <div id="modalInputContainer"></div>
+            <div class="modal-buttons" id="modalButtons"></div>
+        </div>
+    </div>
+
 <script>
     const DEFAULT_CONFIG = { 
         wake: "08:30", 
@@ -962,6 +1027,75 @@
             console.error("Error parsing " + key, e);
             return defaultVal;
         }
+    }
+    
+    // 自定义模态对话框函数
+    function showModal(options) {
+        const modal = document.getElementById('customModal');
+        const title = document.getElementById('modalTitle');
+        const message = document.getElementById('modalMessage');
+        const inputContainer = document.getElementById('modalInputContainer');
+        const buttonsContainer = document.getElementById('modalButtons');
+        
+        title.textContent = options.title || '提示';
+        message.textContent = options.message || '';
+        inputContainer.innerHTML = '';
+        buttonsContainer.innerHTML = '';
+        
+        // 添加输入框（如果有）
+        if (options.inputs && options.inputs.length > 0) {
+            options.inputs.forEach(input => {
+                const label = document.createElement('label');
+                label.className = 'modal-input-label';
+                label.textContent = input.label;
+                
+                const inputEl = document.createElement(input.type === 'textarea' ? 'textarea' : 'input');
+                inputEl.className = 'modal-input';
+                inputEl.id = input.id;
+                inputEl.placeholder = input.placeholder || '';
+                inputEl.value = input.value || '';
+                if (input.type && input.type !== 'textarea') inputEl.type = input.type;
+                if (input.type === 'textarea') inputEl.rows = 3;
+                
+                inputContainer.appendChild(label);
+                inputContainer.appendChild(inputEl);
+            });
+        }
+        
+        // 添加按钮
+        if (options.buttons && options.buttons.length > 0) {
+            options.buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = `modal-btn ${btn.primary ? 'modal-btn-primary' : 'modal-btn-secondary'}`;
+                button.textContent = btn.text;
+                button.onclick = () => {
+                    // 收集输入值
+                    const values = {};
+                    if (options.inputs) {
+                        options.inputs.forEach(input => {
+                            const el = document.getElementById(input.id);
+                            values[input.id] = el ? el.value : '';
+                        });
+                    }
+                    
+                    hideModal();
+                    if (btn.callback) btn.callback(values);
+                };
+                buttonsContainer.appendChild(button);
+            });
+        }
+        
+        modal.classList.add('show');
+        
+        // 点击背景关闭
+        modal.onclick = (e) => {
+            if (e.target === modal) hideModal();
+        };
+    }
+    
+    function hideModal() {
+        const modal = document.getElementById('customModal');
+        modal.classList.remove('show');
     }
 
     let historyData = safeParse('habit_data_v15', []);
@@ -1103,14 +1237,26 @@
         
         const saved = localStorage.getItem('habit_timer_state_v1');
         if (!saved) {
-            // 如果没有保存的状态，确保UI处于空闲状态
+            // 如果没有保存的状态，停止计时器并重置UI
+            const wasRunning = timerRunning;
+            
             timerRunning = false;
             timerPaused = false;
             timerSeconds = 0;
+            
+            // 重置UI
             const idleBtns = document.getElementById('timerIdleBtns');
             const activeBtns = document.getElementById('timerActiveBtns');
             if (idleBtns) idleBtns.style.display = 'flex';
             if (activeBtns) activeBtns.style.display = 'none';
+            
+            // 重置显示
+            updateTimerUI();
+            updateStickyNotif();
+            
+            if (wasRunning) {
+                console.log('⏹️ 计时器已在其他设备结束，本地同步停止');
+            }
             return;
         }
         
@@ -1169,10 +1315,18 @@
                 }, 1000);
                 
                 // 恢复后也启动定期同步
-                timerSyncInterval = setInterval(() => {
-                    if (timerRunning) {
-                        console.log('🔄 定期同步计时器状态到云端...');
-                        triggerAutoSave();
+                timerSyncInterval = setInterval(async () => {
+                    if (timerRunning && ghConfig.token && ghConfig.repo) {
+                        console.log('🔄 定期同步计时器状态...');
+                        // 先 pull 检查云端是否有变化（比如其他设备已结束计时）
+                        await syncGitHub('pull', true);
+                        // 如果计时器还在运行（没有被 pull 停止），再 push 本地状态
+                        if (timerRunning) {
+                            triggerAutoSave();
+                        }
+                    } else if (timerRunning) {
+                        // 如果没有配置 GitHub，只保存到本地
+                        saveTimerState();
                     }
                 }, 30000); // 30秒
                 
@@ -1264,7 +1418,16 @@
             }
         }, 2000);
 
+        // 初始同步
         if(ghConfig.token && ghConfig.repo) syncGitHub('pull', true);
+        
+        // 每2分钟自动同步一次，检测其他设备的变化
+        if(ghConfig.token && ghConfig.repo) {
+            setInterval(() => {
+                console.log('🔄 定期检查云端数据更新...');
+                syncGitHub('pull', true);
+            }, 120000); // 2分钟
+        }
     }
 
     function toggleWeek(day) {
@@ -2404,6 +2567,7 @@
                         <div class="btn-action" onclick="togglePlanMenu(event, '${idSuffix}')">⋮</div>
                         <div id="menu-${idSuffix}" class="action-menu action-menu-dropdown ${showClass}">
                             <div class="btn-mini" style="background:var(--time); color:#fff; width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="completePlannedTask(${p.id})">✅ 完成任务</div>
+                            <div class="btn-mini" style="background:var(--warning); color:#fff; width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="abandonPlannedTask(${p.id})">🚫 放弃任务</div>
                             <div class="btn-mini" style="background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="togglePinTask(${p.id})">
                                 ${pinnedTaskId == p.id ? '📍 取消置顶' : '📌 设为置顶'}
                             </div>
@@ -2687,9 +2851,55 @@
                 localStorage.setItem('habit_planned_tasks_v1', JSON.stringify(plannedTasks));
                 renderTimerHistory();
                 renderPlannedTasks();
-                updateUI();
-                triggerAutoSave();
-                alert("已完成并记录（不计入时间银行）");
+                
+                // 询问是否添加奖励金
+                showModal({
+                    title: '✅ 完成计划',
+                    message: `计划任务「${p.name}」已完成\n用时：${hours.toFixed(2)} 小时\n\n是否添加愿望金（奖励）？`,
+                    buttons: [
+                        { text: '不添加', primary: false, callback: () => {
+                            updateUI();
+                            triggerAutoSave();
+                        }},
+                        { text: '添加奖励', primary: true, callback: () => {
+                            showModal({
+                                title: '💰 添加奖励金',
+                                message: `任务：${p.name}\n用时：${hours.toFixed(2)} 小时`,
+                                inputs: [
+                                    { id: 'planRewardAmount', label: '金额（元）', type: 'number', placeholder: '输入金额', value: '' },
+                                    { id: 'planRewardReason', label: '原因/备注', type: 'textarea', placeholder: '记录一下原因', value: `完成计划任务「${p.name}」` }
+                                ],
+                                buttons: [
+                                    { text: '取消', primary: false, callback: () => {
+                                        updateUI();
+                                        triggerAutoSave();
+                                    }},
+                                    { text: '确认添加', primary: true, callback: (values) => {
+                                        const amount = parseFloat(values.planRewardAmount);
+                                        if (!isNaN(amount) && amount > 0) {
+                                            const fundRecord = {
+                                                id: Date.now() + 1,
+                                                date: getLocalTodayStr(),
+                                                title: `💰 完成计划：${p.name}`,
+                                                fund: amount,
+                                                theme: 'theme-success',
+                                                details: {
+                                                    note: values.planRewardReason,
+                                                    duration: hours.toFixed(2) + 'h',
+                                                    plannedTime: `${p.plannedTime} - ${p.plannedEndTime}`
+                                                }
+                                            };
+                                            historyData.unshift(fundRecord);
+                                            localStorage.setItem('habit_data_v15', JSON.stringify(historyData));
+                                        }
+                                        updateUI();
+                                        triggerAutoSave();
+                                    }}
+                                ]
+                            });
+                        }}
+                    ]
+                });
                 return;
             }
         }
@@ -2708,9 +2918,76 @@
         renderPlannedTasks();
         triggerAutoSave();
     }
+    
+    function abandonPlannedTask(id) {
+        const task = plannedTasks.find(x => x.id === id);
+        if (!task) return;
+        
+        showModal({
+            title: '🚫 放弃计划',
+            message: `确定要放弃计划任务「${task.name}」吗？\n\n可以选择是否添加罚金`,
+            buttons: [
+                { text: '取消', primary: false, callback: () => {} },
+                { text: '仅删除计划', primary: false, callback: () => {
+                    if (pinnedTaskId == id) unpinTask();
+                    plannedTasks = plannedTasks.filter(x => x.id !== id);
+                    localStorage.setItem('habit_planned_tasks_v1', JSON.stringify(plannedTasks));
+                    renderPlannedTasks();
+                    updateUI();
+                    triggerAutoSave();
+                }},
+                { text: '添加罚金并删除', primary: true, callback: () => {
+                    showModal({
+                        title: '💸 添加罚金',
+                        message: `放弃任务：${task.name}`,
+                        inputs: [
+                            { id: 'penaltyAmount', label: '罚金金额（元）', type: 'number', placeholder: '输入金额', value: '' },
+                            { id: 'penaltyReason', label: '放弃原因/备注', type: 'textarea', placeholder: '记录一下原因', value: `放弃计划任务「${task.name}」` }
+                        ],
+                        buttons: [
+                            { text: '取消', primary: false, callback: () => {} },
+                            { text: '确认', primary: true, callback: (values) => {
+                                const penalty = parseFloat(values.penaltyAmount);
+                                if (!isNaN(penalty) && penalty > 0) {
+                                    const fundRecord = {
+                                        id: Date.now(),
+                                        date: getLocalTodayStr(),
+                                        title: `💸 放弃计划：${task.name}`,
+                                        fund: -penalty,
+                                        theme: 'theme-repair',
+                                        details: {
+                                            note: values.penaltyReason,
+                                            plannedTime: task.plannedTime || '--',
+                                            plannedEndTime: task.plannedEndTime || '--'
+                                        }
+                                    };
+                                    historyData.unshift(fundRecord);
+                                    localStorage.setItem('habit_data_v15', JSON.stringify(historyData));
+                                }
+                                
+                                if (pinnedTaskId == id) unpinTask();
+                                plannedTasks = plannedTasks.filter(x => x.id !== id);
+                                localStorage.setItem('habit_planned_tasks_v1', JSON.stringify(plannedTasks));
+                                renderPlannedTasks();
+                                updateUI();
+                                triggerAutoSave();
+                            }}
+                        ]
+                    });
+                }}
+            ]
+        });
+    }
 
     function startTimer(fromPlan = false) {
-        if (!document.getElementById('timerTaskName').value.trim()) return alert("请输入任务名称");
+        if (!document.getElementById('timerTaskName').value.trim()) {
+            showModal({
+                title: '⚠️ 提示',
+                message: '请先输入任务名称',
+                buttons: [{ text: '确定', primary: true, callback: () => {} }]
+            });
+            return;
+        }
         timerRunning = true;
         timerPaused = false;
         if (!fromPlan) isTimerFromPlan = false; // 如果不是从计划开始，重置标志
@@ -2733,10 +3010,18 @@
         }, 1000);
         
         // 每30秒同步一次到云端，确保多设备能及时获取最新状态
-        timerSyncInterval = setInterval(() => {
-            if (timerRunning) {
-                console.log('🔄 定期同步计时器状态到云端...');
-                triggerAutoSave();
+        timerSyncInterval = setInterval(async () => {
+            if (timerRunning && ghConfig.token && ghConfig.repo) {
+                console.log('🔄 定期同步计时器状态...');
+                // 先 pull 检查云端是否有变化（比如其他设备已结束计时）
+                await syncGitHub('pull', true);
+                // 如果计时器还在运行（没有被 pull 停止），再 push 本地状态
+                if (timerRunning) {
+                    triggerAutoSave();
+                }
+            } else if (timerRunning) {
+                // 如果没有配置 GitHub，只保存到本地
+                saveTimerState();
             }
         }, 30000); // 30秒
     }
@@ -2761,8 +3046,20 @@
     }
 
     function stopTimer() {
-        if (!confirm("确认结束本次计时并保存？")) return;
+        const hours = timerSeconds / 3600;
+        const taskName = document.getElementById('timerTaskName').value;
         
+        showModal({
+            title: '⏹️ 结束计时',
+            message: `确认结束本次计时并保存？\n\n任务：${taskName}\n用时：${hours.toFixed(2)} 小时`,
+            buttons: [
+                { text: '取消', primary: false, callback: () => {} },
+                { text: '确认结束', primary: true, callback: () => { finalizeStopTimer(); } }
+            ]
+        });
+    }
+    
+    function finalizeStopTimer() {
         clearInterval(timerInterval);
         clearInterval(timerSyncInterval); // 清除同步定时器
         const hours = timerSeconds / 3600;
@@ -2784,35 +3081,94 @@
             startTime: startTime,
             time: endTime,
             isPlanned: isTimerFromPlan,
-            todoId: todoId ? parseInt(todoId) : null // 记录关联的待办ID
+            todoId: todoId ? parseInt(todoId) : null
         };
         
         timerRecords.unshift(record);
-        
-        // 持久化
         localStorage.setItem('habit_timer_records_v1', JSON.stringify(timerRecords));
         
-        // 检查是否有关联的待办事项，提醒用户完成
+        // 检查是否有关联的待办事项
         if (todoId) {
             const id = String(todoId);
             const todo = todoList.find(t => String(t.id) === id && t.status === 'pending');
             if (todo) {
                 const reward = todo.reward || 0;
-                const penalty = todo.penalty || 0;
-                const message = `✅ 计时已结束！\n\n是否同时完成待办事项「${todo.title}」？\n\n完成将获得 +${reward} 元愿望金`;
-                if (confirm(message)) {
-                    finishTodo(id, 'success');
-                }
+                showModal({
+                    title: '✅ 完成待办？',
+                    message: `计时已结束！\n\n是否同时完成待办事项「${todo.title}」？\n完成将获得 +${reward} 元愿望金`,
+                    buttons: [
+                        { text: '暂不完成', primary: false, callback: () => { askForFunds(taskName, hours); } },
+                        { text: '完成待办', primary: true, callback: () => {
+                            finishTodo(id, 'success');
+                            askForFunds(taskName, hours);
+                        }}
+                    ]
+                });
+                return;
             }
         }
         
+        // 直接询问添加奖励/罚金
+        askForFunds(taskName, hours);
+    }
+    
+    function askForFunds(taskName, hours) {
+        showModal({
+            title: '💰 添加奖励/惩罚',
+            message: `计时任务「${taskName}」已完成\n用时：${hours.toFixed(2)} 小时\n\n是否添加愿望金或罚金？`,
+            buttons: [
+                { text: '不添加', primary: false, callback: () => { completeTimerStop(); } },
+                { text: '添加奖励', primary: true, callback: () => { showFundInput(taskName, hours, true); } },
+                { text: '添加罚金', primary: false, callback: () => { showFundInput(taskName, hours, false); } }
+            ]
+        });
+    }
+    
+    function showFundInput(taskName, hours, isReward) {
+        showModal({
+            title: isReward ? '💵 添加愿望金' : '💸 添加罚金',
+            message: `任务：${taskName}\n用时：${hours.toFixed(2)} 小时`,
+            inputs: [
+                { id: 'fundAmount', label: '金额（元）', type: 'number', placeholder: '输入金额', value: '' },
+                { id: 'fundReason', label: '原因/备注', type: 'textarea', placeholder: '记录一下原因', value: `完成计时任务「${taskName}」` }
+            ],
+            buttons: [
+                { text: '取消', primary: false, callback: () => { completeTimerStop(); } },
+                { text: '确认添加', primary: true, callback: (values) => {
+                    const amount = parseFloat(values.fundAmount);
+                    if (isNaN(amount) || amount <= 0) {
+                        completeTimerStop();
+                        return;
+                    }
+                    
+                    const fundRecord = {
+                        id: Date.now() + 1,
+                        date: getLocalTodayStr(),
+                        title: isReward ? `💰 计时奖励：${taskName}` : `💸 计时惩罚：${taskName}`,
+                        fund: isReward ? amount : -amount,
+                        theme: isReward ? 'theme-success' : 'theme-repair',
+                        details: {
+                            note: values.fundReason,
+                            timerDuration: hours.toFixed(2) + 'h'
+                        }
+                    };
+                    
+                    historyData.unshift(fundRecord);
+                    localStorage.setItem('habit_data_v15', JSON.stringify(historyData));
+                    completeTimerStop();
+                }}
+            ]
+        });
+    }
+    
+    function completeTimerStop() {
         // 重置UI
         timerSeconds = 0;
         timerRunning = false;
-        isTimerFromPlan = false; // 重置标志
+        isTimerFromPlan = false;
         updateTimerUI();
         document.getElementById('timerTaskName').value = '';
-        document.getElementById('timerTaskName').removeAttribute('data-todo-id'); // 清除关联
+        document.getElementById('timerTaskName').removeAttribute('data-todo-id');
         document.getElementById('timerNote').value = '';
         initTimerTime();
         
@@ -2821,13 +3177,12 @@
         if (idleBtns) idleBtns.style.display = 'flex';
         if (activeBtns) activeBtns.style.display = 'none';
         
-        updateStickyNotif(); // 结束时移除计时通知
-        
-        // 清除计时器状态
+        updateStickyNotif();
         localStorage.removeItem('habit_timer_state_v1');
+        console.log('⏹️ 计时器已结束，准备同步到云端...');
 
         renderTimerHistory();
-        renderQuickTasks(); // 刷新快选胶囊（因为待办可能已完成）
+        renderQuickTasks();
         updateUI();
         triggerAutoSave();
     }
@@ -3462,14 +3817,19 @@
                     }
                     
                     // 同步计时器状态
-                    if(cloudData.timerState && cloudData.timerState.running) {
+                    const hadLocalTimer = localStorage.getItem('habit_timer_state_v1') !== null;
+                    const hasCloudTimer = cloudData.timerState && cloudData.timerState.running;
+                    
+                    if(hasCloudTimer) {
                         // 如果云端有正在运行的计时器，保存到本地
                         localStorage.setItem('habit_timer_state_v1', JSON.stringify(cloudData.timerState));
                         console.log('📥 从云端同步到计时器状态:', cloudData.timerState.taskName);
                     } else {
                         // 如果云端没有运行的计时器，清除本地的
+                        if (hadLocalTimer && timerRunning) {
+                            console.log('⏹️ 检测到计时器在其他设备已结束，同步停止本地计时器');
+                        }
                         localStorage.removeItem('habit_timer_state_v1');
-                        console.log('🧹 清除本地计时器状态（云端无活动计时器）');
                     }
 
                     if(cloudData.timeBank !== undefined) timeBank = cloudData.timeBank;
