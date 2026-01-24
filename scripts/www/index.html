@@ -455,6 +455,43 @@
             display: block; font-size: 13px; color: var(--text-sub);
             margin-bottom: 8px; font-weight: 600;
         }
+        
+        /* 界面显示配置复选框样式 */
+        .interface-option {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px; background: var(--input-bg);
+            border-radius: 12px; cursor: pointer;
+            border: 2px solid var(--border);
+            transition: all 0.2s ease;
+        }
+        .interface-option:hover {
+            background: var(--border);
+            transform: translateX(2px);
+        }
+        .interface-option.checked {
+            background: var(--success-bg);
+            border-color: var(--success);
+        }
+        .interface-option input[type="checkbox"] {
+            width: 20px; height: 20px;
+            cursor: pointer;
+            accent-color: var(--success);
+        }
+        .interface-option-label {
+            flex: 1; font-size: 14px; font-weight: 600;
+            color: var(--text-main);
+        }
+        .interface-option.checked .interface-option-label {
+            color: var(--success);
+        }
+        .interface-option-icon {
+            font-size: 18px;
+            opacity: 0.3;
+            transition: all 0.2s;
+        }
+        .interface-option.checked .interface-option-icon {
+            opacity: 1;
+        }
 
         /* Time Bank Exchange Card */
         .exchange-card {
@@ -583,8 +620,10 @@
                         <input type="date" id="todoDate" style="flex:3">
                         <input type="time" id="todoTime" style="flex:2">
                     </div>
+                    <div class="chips-container" style="margin-top:8px;" id="todoTimeChips"></div>
                 </div>
                 <input type="text" id="todoTitle" placeholder="事项名称" style="margin-bottom:8px;">
+                <div class="chips-container" style="margin-bottom:8px;" id="todoTaskChips"></div>
                 <textarea id="todoNote" placeholder="详细备注" rows="2" style="margin-bottom:8px; font-weight:normal; font-size:14px;"></textarea>
 
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
@@ -601,9 +640,12 @@
                 </div>
 
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <div style="display:flex; flex:2; gap:4px;">
-                        <input type="number" id="todoReward" placeholder="愿望金" value="1" style="border-color:var(--success);">
-                        <input type="number" id="todoPenalty" placeholder="惩罚金" value="1" style="border-color:var(--danger);">
+                    <div style="display:flex; flex:2; gap:4px; flex-direction: column;">
+                        <div style="display:flex; gap:4px;">
+                            <input type="number" id="todoReward" placeholder="愿望金" value="1" style="border-color:var(--success);">
+                            <input type="number" id="todoPenalty" placeholder="惩罚金" value="1" style="border-color:var(--danger);">
+                        </div>
+                        <div class="chips-container" style="margin-top:4px;" id="todoFundChips"></div>
                     </div>
 
                     <!-- 统一的操作按钮 -->
@@ -846,6 +888,50 @@
         </div>
 
         <div class="card">
+            <div class="card-title">📋 时间快选配置</div>
+            <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">自定义待办和计时的时间快选胶囊（两者共享）</div>
+            <div class="input-group">
+                <label class="input-label">当前快选胶囊</label>
+                <div class="chips-container" id="todoTimeChipsSettingsList"></div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn-calc btn-secondary" style="flex:1; margin-top:0;" onclick="addTodoTimeChip('offset')">⏰ 添加偏移时间</button>
+                <button class="btn-calc btn-secondary" style="flex:1; margin-top:0;" onclick="addTodoTimeChip('fixed')">🕐 添加固定时间</button>
+            </div>
+            <div style="margin-top:8px;">
+                <button class="btn-mini btn-secondary" style="width:100%;" onclick="resetTodoTimeChips()">🔄 恢复默认快选</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">👁️ 界面显示配置</div>
+            <div style="font-size:12px; color:var(--text-sub); margin-bottom:16px;">选择要显示的功能模块，取消勾选后对应页面将隐藏</div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <label class="interface-option" id="label-showTimer">
+                    <input type="checkbox" id="showTimer" onchange="updateInterfaceOption('showTimer')">
+                    <span class="interface-option-icon">⏱️</span>
+                    <span class="interface-option-label">计时页面</span>
+                    <span class="interface-option-icon">✓</span>
+                </label>
+                <label class="interface-option" id="label-showStats">
+                    <input type="checkbox" id="showStats" onchange="updateInterfaceOption('showStats')">
+                    <span class="interface-option-icon">📊</span>
+                    <span class="interface-option-label">统计页面</span>
+                    <span class="interface-option-icon">✓</span>
+                </label>
+                <label class="interface-option" id="label-showShop">
+                    <input type="checkbox" id="showShop" onchange="updateInterfaceOption('showShop')">
+                    <span class="interface-option-icon">🎁</span>
+                    <span class="interface-option-label">商店页面</span>
+                    <span class="interface-option-icon">✓</span>
+                </label>
+            </div>
+            <div style="font-size:11px; color:var(--text-sub); margin-top:12px; padding:10px; background:var(--warning-bg); border-radius:8px; border-left:3px solid var(--warning);">
+                💡 提示：主页和设置页面始终显示，无法隐藏
+            </div>
+        </div>
+
+        <div class="card">
             <div class="card-title">⚙️ GitHub 自动同步</div>
             <div class="input-group"><input type="password" id="ghToken" placeholder="Token"></div>
             <div class="input-group"><input type="text" id="ghRepo" placeholder="用户名/仓库名"></div>
@@ -919,6 +1005,9 @@
                     <input type="time" id="timerPlannedEndTime">
                 </div>
             </div>
+            <!-- 计时时间快选胶囊 -->
+            <div class="chips-container" style="margin-top:8px;" id="timerTimeChips"></div>
+            
             <div class="input-group">
                 <label class="input-label">备注</label>
                 <textarea id="timerNote" placeholder="记下点什么..." rows="1" style="min-height: 46px;"></textarea>
@@ -1015,7 +1104,9 @@
         historyLimit: 5,
         quickTasks: ['📚 阅读', '💻 编程', '✍️ 写作', '🏃 运动', '🎸 练习', '🧹 家务'],
         penalties: { wakeS: 2, wakeL: 5, sleepS: 2, sleepL: 5, studyS: 5, studyL: 10 }, 
-        weekend: [0, 6] 
+        weekend: [0, 6],
+        todoTimeChips: [], // 默认为空数组，使用内置默认快选
+        interface: { showTimer: true, showStats: true, showShop: true } // 默认显示所有界面
     };
     
     function safeParse(key, defaultVal) {
@@ -1106,6 +1197,16 @@
         config.quickTasks = DEFAULT_CONFIG.quickTasks;
     }
     
+    // 确保配置中包含界面显示设置（向后兼容）
+    if (!config.interface) {
+        config.interface = DEFAULT_CONFIG.interface;
+    }
+    
+    // 确保配置中包含待办时间快选（向后兼容）
+    if (!config.todoTimeChips) {
+        config.todoTimeChips = DEFAULT_CONFIG.todoTimeChips;
+    }
+    
     let wishList = safeParse('habit_wishes_v1', []);
     let todoList = safeParse('habit_todos_v1', []);
     let userStrategies = safeParse('habit_strategies_v1', { study: ["⚡ 番茄钟"], sleep: ["📵 远离屏幕"], wake: ["⏰ 闹钟放远"] });
@@ -1164,6 +1265,7 @@
             if (typeof renderTimerHistory === 'function') renderTimerHistory(); 
             if (typeof loadDailyReview === 'function') loadDailyReview();
             if (typeof renderQuickTasks === 'function') renderQuickTasks();
+            if (typeof renderTimerTimeChips === 'function') renderTimerTimeChips();
             if (!timerRunning) initTimerTime();
         }
         
@@ -1374,12 +1476,117 @@
     }
 
     function initTodoTime() {
+        // 默认设置为1小时后
         const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const timeStr = `${hours}:${minutes}`;
+        const after1h = new Date(now.getTime() + 60 * 60 * 1000);
+        const time1h = `${String(after1h.getHours()).padStart(2, '0')}:${String(after1h.getMinutes()).padStart(2, '0')}`;
+        
         const todoTimeInput = document.getElementById('todoTime');
-        if (todoTimeInput) todoTimeInput.value = timeStr;
+        if (todoTimeInput) todoTimeInput.value = time1h;
+        
+        // 渲染时间快选胶囊
+        renderTodoTimeChips();
+        // 渲染任务快选胶囊
+        renderTodoTaskChips();
+        // 渲染金额快选胶囊
+        renderTodoFundChips();
+    }
+    
+    // 渲染待办事项时间快选胶囊
+    function renderTodoTimeChips() {
+        const container = document.getElementById('todoTimeChips');
+        if (!container) return;
+        
+        const now = new Date();
+        const chips = [];
+        
+        // 获取用户自定义的时间快选（如果有）
+        const customTimeChips = config.todoTimeChips || [];
+        
+        if (customTimeChips.length > 0) {
+            // 使用用户自定义的快选
+            customTimeChips.forEach(chipConfig => {
+                if (chipConfig.type === 'offset') {
+                    // 偏移类型：如"1小时后"
+                    const offsetMs = chipConfig.hours * 60 * 60 * 1000;
+                    const targetTime = new Date(now.getTime() + offsetMs);
+                    const timeStr = `${String(targetTime.getHours()).padStart(2, '0')}:${String(targetTime.getMinutes()).padStart(2, '0')}`;
+                    chips.push(`<div class="chip" onclick="setTodoTime('${timeStr}')">${chipConfig.label} ${timeStr}</div>`);
+                } else if (chipConfig.type === 'fixed') {
+                    // 固定时间类型：如"今晚23:59"
+                    chips.push(`<div class="chip" onclick="setTodoTime('${chipConfig.time}')">${chipConfig.label}</div>`);
+                }
+            });
+        } else {
+            // 默认快选
+            // 1小时后
+            const after1h = new Date(now.getTime() + 60 * 60 * 1000);
+            const time1h = `${String(after1h.getHours()).padStart(2, '0')}:${String(after1h.getMinutes()).padStart(2, '0')}`;
+            chips.push(`<div class="chip" onclick="setTodoTime('${time1h}')">1小时后 ${time1h}</div>`);
+            
+            // 2小时后
+            const after2h = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+            const time2h = `${String(after2h.getHours()).padStart(2, '0')}:${String(after2h.getMinutes()).padStart(2, '0')}`;
+            chips.push(`<div class="chip" onclick="setTodoTime('${time2h}')">2小时后 ${time2h}</div>`);
+            
+            // 3小时后
+            const after3h = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+            const time3h = `${String(after3h.getHours()).padStart(2, '0')}:${String(after3h.getMinutes()).padStart(2, '0')}`;
+            chips.push(`<div class="chip" onclick="setTodoTime('${time3h}')">3小时后 ${time3h}</div>`);
+            
+            // 今晚11点半
+            chips.push(`<div class="chip" onclick="setTodoTime('23:30')">今晚 23:30</div>`);
+        }
+        
+        container.innerHTML = chips.join('');
+    }
+    
+    // 设置待办时间
+    function setTodoTime(time) {
+        const todoTimeInput = document.getElementById('todoTime');
+        if (todoTimeInput) todoTimeInput.value = time;
+    }
+    
+    // 渲染待办事项任务快选胶囊（与计时器同步）
+    function renderTodoTaskChips() {
+        const container = document.getElementById('todoTaskChips');
+        if (!container) return;
+        
+        const quickTasks = config.quickTasks || [];
+        container.innerHTML = quickTasks.map(task => 
+            `<div class="chip" onclick="setTodoTask('${task}')">${task}</div>`
+        ).join('');
+    }
+    
+    // 设置待办任务
+    function setTodoTask(task) {
+        const todoTitleInput = document.getElementById('todoTitle');
+        if (todoTitleInput) todoTitleInput.value = task;
+    }
+    
+    let lastReward = parseFloat(localStorage.getItem('habit_last_reward')) || 1;
+    let lastPenalty = parseFloat(localStorage.getItem('habit_last_penalty')) || 1;
+    
+    // 渲染待办事项金额快选胶囊
+    function renderTodoFundChips() {
+        const container = document.getElementById('todoFundChips');
+        if (!container) return;
+        
+        const chips = [];
+        chips.push(`<div class="chip" onclick="setTodoFunds(${lastReward}, ${lastPenalty})">上次 ¥${lastReward}/¥${lastPenalty}</div>`);
+        chips.push(`<div class="chip" onclick="setTodoFunds(5, 5)">¥5/¥5</div>`);
+        chips.push(`<div class="chip" onclick="setTodoFunds(10, 10)">¥10/¥10</div>`);
+        chips.push(`<div class="chip" onclick="setTodoFunds(20, 20)">¥20/¥20</div>`);
+        
+        container.innerHTML = chips.join('');
+    }
+    
+    // 设置待办金额
+    function setTodoFunds(reward, penalty) {
+        const rewardInput = document.getElementById('todoReward');
+        const penaltyInput = document.getElementById('todoPenalty');
+        if (rewardInput) rewardInput.value = reward;
+        if (penaltyInput) penaltyInput.value = penalty;
     }
 
     function initTimerTime() {
@@ -1389,6 +1596,86 @@
         const timeStr = `${hours}:${minutes}`;
         const timerPlannedTimeInput = document.getElementById('timerPlannedTime');
         if (timerPlannedTimeInput) timerPlannedTimeInput.value = timeStr;
+        
+        // 渲染计时器时间快选胶囊
+        renderTimerTimeChips();
+    }
+    
+    // 渲染计时器时间快选胶囊
+    function renderTimerTimeChips() {
+        const container = document.getElementById('timerTimeChips');
+        if (!container) return;
+        
+        const now = new Date();
+        const chips = [];
+        
+        // 获取用户自定义的时间快选（与待办共享配置）
+        const customTimeChips = config.todoTimeChips || [];
+        
+        if (customTimeChips.length > 0) {
+            // 使用用户自定义的快选
+            customTimeChips.forEach(chipConfig => {
+                if (chipConfig.type === 'offset') {
+                    // 偏移类型：如"1小时后"
+                    const offsetMs = chipConfig.hours * 60 * 60 * 1000;
+                    const targetTime = new Date(now.getTime() + offsetMs);
+                    const timeStr = `${String(targetTime.getHours()).padStart(2, '0')}:${String(targetTime.getMinutes()).padStart(2, '0')}`;
+                    chips.push(`<div class="chip" onclick="setTimerPlannedTime('${timeStr}')">${chipConfig.label} ${timeStr}</div>`);
+                } else if (chipConfig.type === 'fixed') {
+                    // 固定时间类型：如"今晚23:59"
+                    chips.push(`<div class="chip" onclick="setTimerPlannedTime('${chipConfig.time}')">${chipConfig.label}</div>`);
+                }
+            });
+        } else {
+            // 默认快选
+            // 1小时后
+            const after1h = new Date(now.getTime() + 60 * 60 * 1000);
+            const time1h = `${String(after1h.getHours()).padStart(2, '0')}:${String(after1h.getMinutes()).padStart(2, '0')}`;
+            chips.push(`<div class="chip" onclick="setTimerPlannedTime('${time1h}')">1小时后 ${time1h}</div>`);
+            
+            // 2小时后
+            const after2h = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+            const time2h = `${String(after2h.getHours()).padStart(2, '0')}:${String(after2h.getMinutes()).padStart(2, '0')}`;
+            chips.push(`<div class="chip" onclick="setTimerPlannedTime('${time2h}')">2小时后 ${time2h}</div>`);
+            
+            // 3小时后
+            const after3h = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+            const time3h = `${String(after3h.getHours()).padStart(2, '0')}:${String(after3h.getMinutes()).padStart(2, '0')}`;
+            chips.push(`<div class="chip" onclick="setTimerPlannedTime('${time3h}')">3小时后 ${time3h}</div>`);
+            
+            // 今晚11点半
+            chips.push(`<div class="chip" onclick="setTimerPlannedTime('23:30')">今晚 23:30</div>`);
+        }
+        
+        container.innerHTML = chips.join('');
+    }
+    
+    // 设置计时器起始时间
+    function setTimerPlannedTime(time) {
+        const input = document.getElementById('timerPlannedTime');
+        if (input) input.value = time;
+    }
+    
+    // 设置计时器结束时间
+    function setTimerPlannedEndTime(time) {
+        const input = document.getElementById('timerPlannedEndTime');
+        if (input) input.value = time;
+    }
+    
+    // 快速设置计时器时间段（起始+结束）
+    function setTimerTimeRange(startTime, duration) {
+        const startInput = document.getElementById('timerPlannedTime');
+        if (startInput) startInput.value = startTime;
+        
+        // 计算结束时间
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const startDate = new Date();
+        startDate.setHours(hours, minutes, 0, 0);
+        const endDate = new Date(startDate.getTime() + duration * 60 * 60 * 1000);
+        const endTime = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+        
+        const endInput = document.getElementById('timerPlannedEndTime');
+        if (endInput) endInput.value = endTime;
     }
 
     function init() {
@@ -1498,7 +1785,12 @@
         document.getElementById('view-todo').style.display = (view === 'todo' ? 'block' : 'none');
         document.getElementById('btn-view-checkin').classList.toggle('active', view === 'checkin');
         document.getElementById('btn-view-todo').classList.toggle('active', view === 'todo');
-        if (view === 'todo') renderTodos();
+        if (view === 'todo') {
+            renderTodos();
+            renderTodoTimeChips();
+            renderTodoTaskChips();
+            renderTodoFundChips();
+        }
     }
 
     function getLocalTodayStr() {
@@ -1822,7 +2114,25 @@
         const reward = parseFloat(document.getElementById('todoReward').value) || 0;
         const penalty = parseFloat(document.getElementById('todoPenalty').value) || 0;
 
-        if(!title || !time || !date) return alert("请填写完整信息");
+        if(!title || !time || !date) {
+            showModal({
+                title: '⚠️ 提示',
+                message: '请填写完整信息（任务名称、截止时间）',
+                buttons: [{ text: '确定', primary: true, callback: () => {} }]
+            });
+            return;
+        }
+
+        // 保存本次金额，用于下次快选
+        if (reward > 0) {
+            lastReward = reward;
+            localStorage.setItem('habit_last_reward', reward);
+        }
+        if (penalty > 0) {
+            lastPenalty = penalty;
+            localStorage.setItem('habit_last_penalty', penalty);
+        }
+        renderTodoFundChips(); // 更新金额快选胶囊
 
         if (id) {
             const t = todoList.find(x => String(x.id) === id);
@@ -1877,7 +2187,7 @@
         document.getElementById('todoType').value = 'do';
         document.getElementById('todoImportance').value = '1';
 
-        document.getElementById('todoReward').value = config.reward || 5;
+        document.getElementById('todoReward').value = '1';
         document.getElementById('todoPenalty').value = '1';
 
         initTodoTime();
@@ -3487,7 +3797,9 @@
                 studyS: parseFloat(document.getElementById('pStudyS').value) || 0,
                 studyL: parseFloat(document.getElementById('pStudyL').value) || 0
             },
-            weekend: config.weekend || [0, 6]
+            weekend: config.weekend || [0, 6],
+            todoTimeChips: config.todoTimeChips || [],
+            interface: config.interface || DEFAULT_CONFIG.interface
         };
         localStorage.setItem('habit_config_v7', JSON.stringify(config));
         triggerAutoSave();
@@ -3522,11 +3834,188 @@
         document.getElementById('btn_week_0').className = `week-btn ${we.includes(0)?'active':''}`;
 
         renderQuickTaskSettings();
+        renderTodoTimeChipSettings();
+        applyInterfaceSettings();
 
         // 填充手动调节数值
         document.getElementById('adjTimeBank').value = Number(timeBank).toFixed(1);
         document.getElementById('adjWallet').value = globalWallet;
         document.getElementById('adjDebt').value = globalDebt;
+    }
+    
+    // 渲染待办时间快选设置
+    function renderTodoTimeChipSettings() {
+        const list = document.getElementById('todoTimeChipsSettingsList');
+        if (!list) return;
+        
+        const chips = config.todoTimeChips || [];
+        if (chips.length === 0) {
+            list.innerHTML = '<div style="font-size:12px; color:var(--text-sub); padding:8px;">使用默认快选（1h后、2h后、3h后、今晚23:30）</div>';
+            return;
+        }
+        
+        list.innerHTML = chips.map((chip, idx) => {
+            const label = chip.type === 'offset' ? `${chip.label} (+${chip.hours}h)` : chip.label;
+            return `<div class="chip chip-removable" onclick="removeTodoTimeChip(${idx})">${label}</div>`;
+        }).join('');
+    }
+    
+    // 添加待办时间快选
+    function addTodoTimeChip(type) {
+        if (!config.todoTimeChips) config.todoTimeChips = [];
+        
+        if (type === 'offset') {
+            const label = prompt('📝 请输入标签名称（如"1小时后"）：');
+            if (!label || !label.trim()) return;
+            
+            const hoursStr = prompt('⏰ 请输入小时偏移量（如"1"表示1小时后）：');
+            const hours = parseFloat(hoursStr);
+            if (isNaN(hours) || hours <= 0) {
+                showModal({
+                    title: '⚠️ 提示',
+                    message: '小时偏移量无效',
+                    buttons: [{ text: '确定', primary: true, callback: () => {} }]
+                });
+                return;
+            }
+            
+            config.todoTimeChips.push({ type: 'offset', label: label.trim(), hours: hours });
+        } else if (type === 'fixed') {
+            const label = prompt('📝 请输入标签名称（如"今晚23:59"）：');
+            if (!label || !label.trim()) return;
+            
+            const time = prompt('🕐 请输入固定时间（格式 HH:MM）：', '23:59');
+            if (!time || !time.trim() || !/^\d{1,2}:\d{2}$/.test(time.trim())) {
+                showModal({
+                    title: '⚠️ 提示',
+                    message: '时间格式不正确，应为 HH:MM',
+                    buttons: [{ text: '确定', primary: true, callback: () => {} }]
+                });
+                return;
+            }
+            
+            config.todoTimeChips.push({ type: 'fixed', label: label.trim(), time: time.trim() });
+        }
+        
+        localStorage.setItem('habit_config_v7', JSON.stringify(config));
+        renderTodoTimeChipSettings();
+        renderTodoTimeChips(); // 同步更新待办页面
+        renderTimerTimeChips(); // 同步更新计时页面
+        triggerAutoSave();
+    }
+    
+    // 删除待办时间快选
+    function removeTodoTimeChip(idx) {
+        if (!config.todoTimeChips) return;
+        config.todoTimeChips.splice(idx, 1);
+        localStorage.setItem('habit_config_v7', JSON.stringify(config));
+        renderTodoTimeChipSettings();
+        renderTodoTimeChips(); // 同步更新待办页面
+        renderTimerTimeChips(); // 同步更新计时页面
+        triggerAutoSave();
+    }
+    
+    // 重置待办时间快选为默认
+    function resetTodoTimeChips() {
+        if (!confirm('确定要恢复为默认的时间快选吗？')) return;
+        config.todoTimeChips = [];
+        localStorage.setItem('habit_config_v7', JSON.stringify(config));
+        renderTodoTimeChipSettings();
+        renderTodoTimeChips(); // 同步更新待办页面
+        renderTimerTimeChips(); // 同步更新计时页面
+        triggerAutoSave();
+    }
+    
+    // 保存界面显示设置
+    // 更新单个界面选项
+    function updateInterfaceOption(id) {
+        const checkbox = document.getElementById(id);
+        if (!checkbox) return;
+        
+        const isChecked = checkbox.checked;
+        
+        // 更新对应的label样式
+        if (id === 'showTimer') {
+            const label = document.getElementById('label-showTimer');
+            if (label) label.classList.toggle('checked', isChecked);
+        } else if (id === 'showStats') {
+            const label = document.getElementById('label-showStats');
+            if (label) label.classList.toggle('checked', isChecked);
+        } else if (id === 'showShop') {
+            const label = document.getElementById('label-showShop');
+            if (label) label.classList.toggle('checked', isChecked);
+        }
+        
+        // 保存设置
+        saveInterfaceSettings();
+    }
+    
+    function saveInterfaceSettings() {
+        const showTimer = document.getElementById('showTimer');
+        const showStats = document.getElementById('showStats');
+        const showShop = document.getElementById('showShop');
+        
+        if (!showTimer || !showStats || !showShop) return;
+        
+        config.interface = {
+            showTimer: showTimer.checked,
+            showStats: showStats.checked,
+            showShop: showShop.checked
+        };
+        
+        localStorage.setItem('habit_config_v7', JSON.stringify(config));
+        applyInterfaceSettings();
+        triggerAutoSave();
+    }
+    
+    // 应用界面显示设置
+    function applyInterfaceSettings() {
+        const interfaceConfig = config.interface || { showTimer: true, showStats: true, showShop: true };
+        
+        // 设置复选框状态和样式
+        const showTimerCheckbox = document.getElementById('showTimer');
+        const showStatsCheckbox = document.getElementById('showStats');
+        const showShopCheckbox = document.getElementById('showShop');
+        
+        const labelTimer = document.getElementById('label-showTimer');
+        const labelStats = document.getElementById('label-showStats');
+        const labelShop = document.getElementById('label-showShop');
+        
+        if (showTimerCheckbox) {
+            showTimerCheckbox.checked = interfaceConfig.showTimer !== false;
+            if (labelTimer) {
+                labelTimer.classList.toggle('checked', interfaceConfig.showTimer !== false);
+            }
+        }
+        if (showStatsCheckbox) {
+            showStatsCheckbox.checked = interfaceConfig.showStats !== false;
+            if (labelStats) {
+                labelStats.classList.toggle('checked', interfaceConfig.showStats !== false);
+            }
+        }
+        if (showShopCheckbox) {
+            showShopCheckbox.checked = interfaceConfig.showShop !== false;
+            if (labelShop) {
+                labelShop.classList.toggle('checked', interfaceConfig.showShop !== false);
+            }
+        }
+        
+        // 显示/隐藏对应的选项卡
+        const tabs = document.querySelectorAll('.tab');
+        const tabOrder = ['checkin', 'timer', 'stats', 'shop', 'settings'];
+        
+        tabs.forEach((tab, index) => {
+            const tabId = tabOrder[index];
+            if (tabId === 'timer' && interfaceConfig.showTimer === false) {
+                tab.style.display = 'none';
+            } else if (tabId === 'stats' && interfaceConfig.showStats === false) {
+                tab.style.display = 'none';
+            } else if (tabId === 'shop' && interfaceConfig.showShop === false) {
+                tab.style.display = 'none';
+            } else {
+                tab.style.display = '';
+            }
+        });
     }
 
     function renderQuickTasks() {
@@ -3668,6 +4157,7 @@
         input.value = '';
         localStorage.setItem('habit_config_v7', JSON.stringify(config));
         renderQuickTaskSettings();
+        renderTodoTaskChips(); // 同步更新待办的快选胶囊
         triggerAutoSave();
     }
 
@@ -3685,6 +4175,7 @@
         localStorage.setItem('habit_config_v7', JSON.stringify(config));
         renderQuickTaskSettings();
         renderQuickTasks();
+        renderTodoTaskChips(); // 同步更新待办的快选胶囊
         triggerAutoSave();
     }
 
