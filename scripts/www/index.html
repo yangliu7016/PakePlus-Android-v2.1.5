@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Habit (v3.7)</title>
+    <title>Habit</title>
 
     <!-- PWA 配置 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -84,24 +84,25 @@
         /* Header */
         .header {
             background: var(--header-bg); backdrop-filter: blur(10px);
-            padding: 12px 16px; position: sticky; top: 0; z-index: 1000;
+            padding: 10px 14px; position: sticky; top: 0; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid var(--border);
-            height: 60px;
+            height: 56px;
+            box-sizing: border-box;
         }
 
         /* Sticky Notification Bar */
         .sticky-notif-bar {
             position: sticky;
-            top: 60px;
+            top: 56px;
             z-index: 999;
             background: var(--header-bg);
             backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--border);
             display: none; /* Hidden by default */
             flex-direction: column;
-            gap: 4px;
-            padding: 8px 16px;
+            gap: 3px;
+            padding: 6px 14px;
             animation: slideDown 0.3s ease-out;
         }
         @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -110,10 +111,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            padding: 6px 10px;
-            border-radius: 8px;
+            padding: 5px 8px;
+            border-radius: 6px;
         }
         .notif-timer { background: var(--success-bg); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.2); }
         .notif-pinned { background: var(--time-bg); color: var(--time); border: 1px solid rgba(129, 140, 248, 0.2); }
@@ -121,18 +122,34 @@
         .notif-btn { font-size: 12px; cursor: pointer; opacity: 0.9; padding: 4px 12px; border-radius: 6px; transition: all 0.2s; }
         .notif-btn:hover { opacity: 1; transform: scale(1.05); }
 
-        .header-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0;}
+        .header-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0; height: 100%;}
+        .header-title {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-start;
+        }
         .header-title h1 {
-            margin: 0; font-size: 18px; font-weight: 800;
+            margin: 0; font-size: 16px; font-weight: 800;
             background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            line-height: 1;
+            padding: 0;
+            display: block;
+            text-indent: 0;
+            letter-spacing: 0;
+            position: relative;
         }
 
         .sync-badge {
             font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 4px;
             opacity: 0.9; color: var(--text-sub); background: var(--input-bg);
-            padding: 4px 8px; border-radius: 12px; border: 1px solid var(--border);
+            padding: 3px 7px; border-radius: 10px; border: 1px solid var(--border);
             cursor: pointer; transition: all 0.2s;
+            line-height: 1;
+            margin: 0;
+            display: inline-flex;
         }
         .sync-badge:active { transform: scale(0.95); background: var(--border); }
         .sync-icon { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; }
@@ -146,6 +163,7 @@
             align-items: center;
             gap: 6px;
             flex-wrap: nowrap;
+            height: 100%;
         }
         .theme-btn {
             background: none; border: 1px solid var(--border); font-size: 14px;
@@ -159,24 +177,31 @@
             padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;
             box-shadow: var(--shadow); display: flex; align-items: center; gap: 4px;
             white-space: nowrap; flex-shrink: 0; height: 28px; cursor: pointer;
+            line-height: 1;
         }
         .badge-wallet { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--border); }
         .badge-debt { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--border); }
         .badge-time { background: var(--time-bg); color: var(--time); border: 1px solid var(--border); }
 
-        .container { max-width: 500px; margin: 16px auto; padding: 0 16px; position: relative; z-index: 1; }
+        .container { max-width: 500px; margin: 12px auto; padding: 0 14px; position: relative; z-index: 1; }
         .card {
             background: var(--bg-card);
-            border-radius: 16px;
-            padding: 18px;
-            margin-bottom: 16px;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
         }
-        .card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        .card[style*="border-color:var(--primary)"] {
+            background: transparent;
+        }
+        #view-todo .card {
+            background: transparent;
+        }
+        .card-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
 
-        .toggle-container { display: flex; background: var(--border); padding: 4px; border-radius: 12px; margin-bottom: 16px; }
-        .toggle-btn { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 700; color: var(--text-sub); border-radius: 10px; cursor: pointer; transition: all 0.3s; }
+        .toggle-container { display: flex; background: var(--border); padding: 3px; border-radius: 10px; margin-bottom: 12px; }
+        .toggle-btn { flex: 1; text-align: center; padding: 6px; font-size: 12px; font-weight: 700; color: var(--text-sub); border-radius: 8px; cursor: pointer; transition: all 0.3s; }
         .toggle-btn.active { background: var(--bg-card); color: var(--primary); box-shadow: var(--shadow); }
 
         .week-btn {
@@ -190,49 +215,50 @@
             box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
         }
 
-        .input-group { margin-bottom: 14px; }
-        .input-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600;}
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .input-group { margin-bottom: 10px; }
+        .input-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-sub); margin-bottom: 4px; font-weight: 600;}
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
         input, select, textarea {
-            width: 100%; padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-size: 15px;
+            width: 100%; padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
             background: var(--input-bg);
             color: var(--text-main);
             font-weight: 600;
             outline: none; -webkit-appearance: none;
             font-family: inherit;
+            text-align: left;
         }
-        textarea { resize: vertical; min-height: 40px; }
+        textarea { resize: vertical; min-height: 36px; }
         input:focus, textarea:focus { border-color: var(--primary); }
 
         button { user-select: none; -webkit-tap-highlight-color: transparent; }
         .btn-calc {
-            width: 100%; padding: 14px; border: none;
-            border-radius: 12px;
+            width: 100%; padding: 10px; border: none;
+            border-radius: 10px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white; font-size: 15px; font-weight: 700;
-            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
-            margin-top: 12px;
+            color: white; font-size: 14px; font-weight: 700;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px;
+            margin-top: 10px;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
         [data-theme="dark"] .btn-calc { box-shadow: none; }
 
         .btn-secondary { background: var(--border); color: var(--text-sub); box-shadow: none; }
         .btn-danger { background: var(--danger); color: white; box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3); }
-        .btn-mini { width: auto; padding: 8px 16px; font-size: 13px; margin-top: 0; border-radius: 10px;}
+        .btn-mini { width: auto; padding: 6px 12px; font-size: 12px; margin-top: 0; border-radius: 8px;}
         .btn-prevent { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; box-shadow:none;}
         [data-theme="dark"] .btn-prevent { background: rgba(55, 48, 163, 0.4); color: #818cf8; border-color: #4338ca; }
 
         .list-item {
-            padding: 14px; border: 1px solid var(--border);
+            padding: 10px; border: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
             position: relative;
             background: var(--input-bg);
-            border-radius: 10px;
-            margin-bottom: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
         .list-item:last-child { margin-bottom: 0; }
         
@@ -287,12 +313,12 @@
         .privacy-check-label::before { content: '🔓'; margin-right: 8px; font-size: 14px; }
         .privacy-check-label.checked::before { content: '🔒'; }
 
-        .todo-section-title { font-size: 12px; font-weight: 800; color: var(--text-sub); margin: 25px 0 10px 4px; text-transform: uppercase; letter-spacing: 0.5px; display: none; align-items: center;}
+        .todo-section-title { font-size: 11px; font-weight: 800; color: var(--text-sub); margin: 18px 0 8px 4px; text-transform: uppercase; letter-spacing: 0.5px; display: none; align-items: center;}
         .todo-section-title.show { display: flex; }
 
         .todo-item {
-            padding: 10px 12px; border: 1px solid var(--border);
-            border-radius: 10px; margin-bottom: 8px;
+            padding: 8px 10px; border: 1px solid var(--border);
+            border-radius: 8px; margin-bottom: 6px;
             display: flex; justify-content: space-between; align-items: center;
             background: var(--bg-card); transition: all 0.3s ease; position: relative;
         }
@@ -348,16 +374,16 @@
         .review-history-label { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
 
         .tab-bar {
-            position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 460px; background: var(--header-bg); backdrop-filter: blur(10px);
-            border-radius: 12px; display: flex; padding: 8px 12px;
+            border-radius: 10px; display: flex; padding: 6px 10px;
             box-shadow: 0 4px 12px -4px rgba(0,0,0,0.1); z-index: 1000;
             border: 1px solid var(--border); justify-content: space-between;
-            padding-bottom: calc(8px + var(--safe-area-bottom));
+            padding-bottom: calc(6px + var(--safe-area-bottom));
         }
-        .tab { text-align: center; color: var(--text-sub); cursor: pointer; font-size: 10px; flex: 1; padding: 2px 0; transition: all 0.2s; }
+        .tab { text-align: center; color: var(--text-sub); cursor: pointer; font-size: 9px; flex: 1; padding: 2px 0; transition: all 0.2s; }
         .tab.active { color: var(--primary); }
-        .tab-icon { font-size: 18px; display: block; margin-bottom: 1px; }
+        .tab-icon { font-size: 16px; display: block; margin-bottom: 1px; }
 
         .page { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
         .page.active { display: block; opacity: 1; transform: translateY(0); }
@@ -367,8 +393,9 @@
         .heatmap-box { height: 36px; border-radius: 8px; background: var(--border); margin-bottom: 6px; }
         .hm-success { background: var(--success); } .hm-fix { background: var(--warning); } .hm-repair { background: var(--danger); }
 
-        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-        .chip { font-size: 12px; padding: 6px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; color: var(--text-sub); }
+        .chips-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+        .chip { font-size: 11px; padding: 4px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; color: var(--text-sub); transition: all 0.2s; }
+        .chip:hover { background: var(--input-bg); border-color: var(--primary); color: var(--primary); }
         .chip-removable { padding-right: 8px; display:inline-flex; align-items:center; }
         .chip-removable::after { content:'×'; font-weight:bold; margin-left:6px; font-size:14px; opacity:0.5; }
 
@@ -522,7 +549,7 @@
         </div>
         <div class="header-right">
             <button id="themeToggle" class="theme-btn" onclick="toggleTheme()">☀️</button>
-            <div class="fund-badge badge-time" onclick="toggleExchangeCard()">⏳ <span id="timeBankDisplay">0</span>h</div>
+            <div class="fund-badge badge-time" onclick="toggleExchangeCard()">⏳ <span id="timeBankDisplay">0</span></div>
             <div class="fund-badge badge-wallet" onclick="switchPage('shop')">💰 <span id="walletDisplay">0</span></div>
             <div class="fund-badge badge-debt" onclick="switchPage('stats')">💸 <span id="debtDisplay">0</span></div>
         </div>
@@ -628,51 +655,47 @@
 
         <!-- B. 待办视图 -->
         <div id="view-todo" style="display:none;">
-            <div class="card" style="padding:16px; border-color:var(--primary);">
+            <div class="card" style="padding:6px; border-color:var(--primary);">
                 <input type="hidden" id="editingId">
-                <div style="margin-bottom:8px;">
-                    <div style="font-size:11px;color:var(--text-sub);margin-bottom:4px;font-weight:600;">截止</div>
-                    <div style="display:flex;gap:8px;">
-                        <input type="date" id="todoDate" style="flex:3">
-                        <input type="time" id="todoTime" style="flex:2">
+                
+                <!-- 时间设置 -->
+                <div style="margin-bottom:5px;">
+                    <div style="display:flex;gap:5px; margin-bottom:4px;">
+                        <input type="date" id="todoDate" style="flex:3; padding:5px; font-size:13px; text-align:left;">
+                        <input type="time" id="todoTime" style="flex:2; padding:5px; font-size:13px; text-align:left;">
                     </div>
-                    <div class="chips-container" style="margin-top:8px;" id="todoTimeChips"></div>
+                    <div class="chips-container" style="margin-top:3px; gap:3px;" id="todoTimeChips"></div>
                 </div>
-                <input type="text" id="todoTitle" placeholder="名称" style="margin-bottom:8px;">
-                <div class="chips-container" style="margin-bottom:8px;" id="todoTaskChips"></div>
-                <textarea id="todoNote" placeholder="备注" rows="2" style="margin-bottom:8px; font-weight:normal; font-size:14px;"></textarea>
+                
+                <!-- 名称和快速任务 -->
+                <input type="text" id="todoTitle" placeholder="名称" style="margin-bottom:4px; padding:5px; font-size:14px; text-align:left;">
+                <div class="chips-container" style="margin-bottom:5px; gap:3px;" id="todoTaskChips"></div>
 
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                    <select id="todoType" style="flex:1.2; padding:10px;" onchange="checkTodoTypeChange()">
-                        <option value="do">✅ 去做</option>
-                        <option value="dont">❌ 不做</option>
-                        <option value="other">⚪ 其它</option>
-                    </select>
-                    <select id="todoImportance" style="flex:1; padding:10px; border-color:var(--primary);">
-                        <option value="1">⚪ 普通</option>
-                        <option value="2">🟡 中等</option>
-                        <option value="3">🔴 重要</option>
-                    </select>
-                </div>
+                <!-- 类型和重要性 -->
+                <div class="chips-container" style="margin-bottom:5px; gap:3px;" id="todoTypeImportanceChips"></div>
+                <input type="hidden" id="todoType" value="do">
+                <input type="hidden" id="todoImportance" value="1">
 
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <div style="display:flex; flex:2; gap:4px; flex-direction: column;">
-                        <div style="display:flex; gap:4px;">
-                            <input type="number" id="todoReward" placeholder="奖励" value="1" style="border-color:var(--success);">
-                            <input type="number" id="todoPenalty" placeholder="惩罚" value="1" style="border-color:var(--danger);">
+                <!-- 奖励/惩罚和提交按钮 -->
+                <div style="display:flex; gap:5px; align-items:flex-start; margin-bottom:5px;">
+                    <div style="flex:1; display:flex; flex-direction:column; gap:3px;">
+                        <div style="display:flex; gap:5px;">
+                            <input type="number" id="todoReward" placeholder="奖励" value="1" style="flex:1; padding:5px; font-size:13px; border-color:var(--success); text-align:left; width:0;">
+                            <input type="number" id="todoPenalty" placeholder="惩罚" value="1" style="flex:1; padding:5px; font-size:13px; border-color:var(--danger); text-align:left; width:0;">
                         </div>
-                        <div class="chips-container" style="margin-top:4px;" id="todoFundChips"></div>
+                        <div class="chips-container" style="gap:3px;" id="todoFundChips"></div>
                     </div>
-
-                    <!-- 统一的操作按钮 -->
-                    <button id="todoSubmitBtn" class="btn-mini" style="background:var(--primary); color:#fff; height:46px; width:46px; font-size:20px;" onclick="saveTodo()">+</button>
+                    <button id="todoSubmitBtn" class="btn-mini" style="background:var(--primary); color:#fff; height:auto; min-height:36px; width:36px; font-size:18px; flex-shrink:0; padding:0;" onclick="saveTodo()">+</button>
                 </div>
+                
+                <!-- 备注 -->
+                <textarea id="todoNote" placeholder="备注" rows="1" style="padding:5px; font-size:13px; min-height:36px; resize:none; text-align:left;"></textarea>
             </div>
 
             <div id="todoContainer">
-                <div id="head-do" class="todo-section-title">必须完成 (Do)</div>
+                <div id="head-do" class="todo-section-title">Do</div>
                 <div id="list-do"></div>
-                <div id="head-dont" class="todo-section-title">禁止行为 (Don't)</div>
+                <div id="head-dont" class="todo-section-title">Not</div>
                 <div id="list-dont"></div>
                 <div id="head-other" class="todo-section-title">其它</div>
                 <div id="list-other"></div>
@@ -1639,6 +1662,9 @@
         renderTodoTaskChips();
         // 渲染金额快选胶囊
         renderTodoFundChips();
+        // 渲染类型和重要性胶囊
+        renderTodoTypeChips();
+        renderTodoImportanceChips();
     }
     
     // 渲染待办事项时间快选胶囊
@@ -1647,7 +1673,8 @@
         if (!container) return;
         
         const now = new Date();
-        const chips = [];
+        const offsetChips = []; // 时间段（offset类型）
+        const fixedChips = [];  // 固定时间点（fixed类型）
         
         // 获取用户自定义的时间快选（如果有）
         const customTimeChips = config.todoTimeChips || [];
@@ -1660,10 +1687,16 @@
                     const offsetMs = chipConfig.hours * 60 * 60 * 1000;
                     const targetTime = new Date(now.getTime() + offsetMs);
                     const timeStr = `${String(targetTime.getHours()).padStart(2, '0')}:${String(targetTime.getMinutes()).padStart(2, '0')}`;
-                    chips.push(`<div class="chip" onclick="setTodoTime('${timeStr}')">${chipConfig.label} ${timeStr}</div>`);
+                    offsetChips.push({ 
+                        html: `<div class="chip" onclick="setTodoTime('${timeStr}')">${chipConfig.label}</div>`,
+                        hours: chipConfig.hours 
+                    });
                 } else if (chipConfig.type === 'fixed') {
                     // 固定时间类型：如"今晚23:59"
-                    chips.push(`<div class="chip" onclick="setTodoTime('${chipConfig.time}')">${chipConfig.label}</div>`);
+                    fixedChips.push({ 
+                        html: `<div class="chip" onclick="setTodoTime('${chipConfig.time}')">${chipConfig.label}</div>`,
+                        time: chipConfig.time 
+                    });
                 }
             });
         } else {
@@ -1671,23 +1704,29 @@
             // 1小时后
             const after1h = new Date(now.getTime() + 60 * 60 * 1000);
             const time1h = `${String(after1h.getHours()).padStart(2, '0')}:${String(after1h.getMinutes()).padStart(2, '0')}`;
-            chips.push(`<div class="chip" onclick="setTodoTime('${time1h}')">1小时后 ${time1h}</div>`);
+            offsetChips.push({ html: `<div class="chip" onclick="setTodoTime('${time1h}')">1小时后</div>`, hours: 1 });
             
             // 2小时后
             const after2h = new Date(now.getTime() + 2 * 60 * 60 * 1000);
             const time2h = `${String(after2h.getHours()).padStart(2, '0')}:${String(after2h.getMinutes()).padStart(2, '0')}`;
-            chips.push(`<div class="chip" onclick="setTodoTime('${time2h}')">2小时后 ${time2h}</div>`);
+            offsetChips.push({ html: `<div class="chip" onclick="setTodoTime('${time2h}')">2小时后</div>`, hours: 2 });
             
             // 3小时后
             const after3h = new Date(now.getTime() + 3 * 60 * 60 * 1000);
             const time3h = `${String(after3h.getHours()).padStart(2, '0')}:${String(after3h.getMinutes()).padStart(2, '0')}`;
-            chips.push(`<div class="chip" onclick="setTodoTime('${time3h}')">3小时后 ${time3h}</div>`);
+            offsetChips.push({ html: `<div class="chip" onclick="setTodoTime('${time3h}')">3小时后</div>`, hours: 3 });
             
             // 今晚11点半
-            chips.push(`<div class="chip" onclick="setTodoTime('23:30')">今晚 23:30</div>`);
+            fixedChips.push({ html: `<div class="chip" onclick="setTodoTime('23:30')">今晚</div>`, time: '23:30' });
         }
         
-        container.innerHTML = chips.join('');
+        // 排序：时间段按hours排序，固定时间点按time排序
+        offsetChips.sort((a, b) => a.hours - b.hours);
+        fixedChips.sort((a, b) => a.time.localeCompare(b.time));
+        
+        // 合并：先时间段，再固定时间点
+        const allChips = offsetChips.map(c => c.html).concat(fixedChips.map(c => c.html));
+        container.innerHTML = allChips.join('');
     }
     
     // 设置待办时间
@@ -1760,23 +1799,23 @@
                 return { reward: r, penalty: p };
             });
         
-        // 添加"上次"选项
+        // 添加"上次"选项（不显示"上次"文字）
         if (lastReward > 0 || lastPenalty > 0) {
-            chips.push(`<div class="chip" onclick="setTodoFunds(${lastReward}, ${lastPenalty})">上次 ¥${lastReward}/¥${lastPenalty}</div>`);
+            chips.push(`<div class="chip" onclick="setTodoFunds(${lastReward}, ${lastPenalty})">${lastReward}/${lastPenalty}</div>`);
         }
         
         // 添加最常用的组合（最多3个）
         topCombos.forEach(combo => {
             if (combo.reward > 0 || combo.penalty > 0) {
-                chips.push(`<div class="chip" onclick="setTodoFunds(${combo.reward}, ${combo.penalty})">¥${combo.reward}/¥${combo.penalty}</div>`);
+                chips.push(`<div class="chip" onclick="setTodoFunds(${combo.reward}, ${combo.penalty})">${combo.reward}/${combo.penalty}</div>`);
             }
         });
         
         // 如果没有历史数据，显示默认值
         if (chips.length === 0) {
-            chips.push(`<div class="chip" onclick="setTodoFunds(1, 1)">¥1/¥1</div>`);
-            chips.push(`<div class="chip" onclick="setTodoFunds(5, 5)">¥5/¥5</div>`);
-            chips.push(`<div class="chip" onclick="setTodoFunds(10, 10)">¥10/¥10</div>`);
+            chips.push(`<div class="chip" onclick="setTodoFunds(1, 1)">1/1</div>`);
+            chips.push(`<div class="chip" onclick="setTodoFunds(5, 5)">5/5</div>`);
+            chips.push(`<div class="chip" onclick="setTodoFunds(10, 10)">10/10</div>`);
         }
         
         container.innerHTML = chips.join('');
@@ -1788,6 +1827,64 @@
         const penaltyInput = document.getElementById('todoPenalty');
         if (rewardInput) rewardInput.value = reward;
         if (penaltyInput) penaltyInput.value = penalty;
+    }
+
+    // 渲染待办类型和重要性胶囊（合并在一行）
+    function renderTodoTypeChips() {
+        const container = document.getElementById('todoTypeImportanceChips');
+        if (!container) return;
+        
+        const currentType = document.getElementById('todoType')?.value || 'do';
+        const currentImportance = document.getElementById('todoImportance')?.value || '1';
+        
+        const types = [
+            { value: 'do', label: '去做' },
+            { value: 'dont', label: '不做' },
+            { value: 'other', label: '其它' }
+        ];
+        
+        const importances = [
+            { value: '1', label: '普通', color: 'var(--info)', bg: 'rgba(59, 130, 246, 0.2)' },
+            { value: '2', label: '中等', color: 'var(--warning)', bg: 'rgba(245, 158, 11, 0.2)' },
+            { value: '3', label: '重要', color: 'var(--danger)', bg: 'rgba(239, 68, 68, 0.2)' }
+        ];
+        
+        const typeChips = types.map(t => {
+            const active = currentType === t.value ? 'style="background:var(--primary-bg); border-color:var(--primary); color:var(--primary);"' : '';
+            return `<div class="chip" ${active} onclick="setTodoType('${t.value}')">${t.label}</div>`;
+        }).join('');
+        
+        const importanceChips = importances.map(i => {
+            const isActive = currentImportance === i.value;
+            const activeStyle = isActive ? `background:${i.bg}; border-color:${i.color}; color:${i.color}; font-weight:700;` : `border-color:${i.color}; color:${i.color}; opacity:0.7;`;
+            return `<div class="chip" style="${activeStyle}" onclick="setTodoImportance('${i.value}')">${i.label}</div>`;
+        }).join('');
+        
+        container.innerHTML = typeChips + importanceChips;
+    }
+
+    // 渲染待办重要性胶囊（保留函数以兼容）
+    function renderTodoImportanceChips() {
+        renderTodoTypeChips();
+    }
+
+    // 设置待办类型
+    function setTodoType(type) {
+        const typeInput = document.getElementById('todoType');
+        if (typeInput) {
+            typeInput.value = type;
+            checkTodoTypeChange();
+            renderTodoTypeChips(); // 更新合并后的胶囊显示
+        }
+    }
+
+    // 设置待办重要性
+    function setTodoImportance(importance) {
+        const importanceInput = document.getElementById('todoImportance');
+        if (importanceInput) {
+            importanceInput.value = importance;
+            renderTodoTypeChips(); // 更新合并后的胶囊显示
+        }
     }
 
     function initTimerTime() {
@@ -2429,6 +2526,10 @@
         document.getElementById('todoReward').value = t.reward;
         document.getElementById('todoPenalty').value = t.penalty;
 
+        // 更新胶囊选中状态
+        renderTodoTypeChips();
+        renderTodoImportanceChips();
+
         const submitBtn = document.getElementById('todoSubmitBtn');
         submitBtn.innerHTML = '保存';
         submitBtn.style.fontSize = '16px';
@@ -2445,6 +2546,10 @@
 
         document.getElementById('todoReward').value = '1';
         document.getElementById('todoPenalty').value = '1';
+        
+        // 更新胶囊选中状态
+        renderTodoTypeChips();
+        renderTodoImportanceChips();
 
         initTodoTime();
         document.getElementById('todoDate').value = getLocalTodayStr();
@@ -2554,7 +2659,7 @@
 
         list.innerHTML = wishList.map((item, idx) => {
             const isHidden = item.hidden && isShopPrivacyOn;
-            const nameDisplay = isHidden ? '🔒 ******' : item.name;
+            const nameDisplay = isHidden ? '****** 🔒' : item.name;
             const btnState = isHidden ? 'disabled style="background:var(--border);cursor:not-allowed;"' : 'style="background:var(--warning);color:#fff;" onclick="buyItem(' + idx + ')"';
 
             const idSuffix = `shop-${idx}`;
@@ -2567,7 +2672,7 @@
             <div class="list-item">
                 <div style="flex:1">
                     <div style="font-weight:bold;color:var(--text-main);">${nameDisplay}</div>
-                    <div style="font-size:12px;color:var(--warning);">${item.cost} ${item.hidden ? '(私密)' : ''}</div>
+                    <div style="font-size:12px;color:var(--warning);">${item.cost}</div>
                 </div>
                 <div style="display:flex;gap:4px; align-items:center;">
                     <button class="btn-mini" ${btnState}>兑换</button>
