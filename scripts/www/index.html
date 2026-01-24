@@ -197,6 +197,7 @@
         }
         #view-todo .card {
             background: transparent;
+            padding: 12px !important;
         }
         .card-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
 
@@ -393,8 +394,8 @@
         .heatmap-box { height: 36px; border-radius: 8px; background: var(--border); margin-bottom: 6px; }
         .hm-success { background: var(--success); } .hm-fix { background: var(--warning); } .hm-repair { background: var(--danger); }
 
-        .chips-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-        .chip { font-size: 11px; padding: 4px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; color: var(--text-sub); transition: all 0.2s; }
+        .chips-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .chip { font-size: 12px; padding: 6px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; color: var(--text-sub); transition: all 0.2s; }
         .chip:hover { background: var(--input-bg); border-color: var(--primary); color: var(--primary); }
         .chip-removable { padding-right: 8px; display:inline-flex; align-items:center; }
         .chip-removable::after { content:'×'; font-weight:bold; margin-left:6px; font-size:14px; opacity:0.5; }
@@ -659,37 +660,35 @@
                 <input type="hidden" id="editingId">
                 
                 <!-- 时间设置 -->
-                <div style="margin-bottom:5px;">
-                    <div style="display:flex;gap:5px; margin-bottom:4px;">
-                        <input type="date" id="todoDate" style="flex:3; padding:5px; font-size:13px; text-align:left;">
-                        <input type="time" id="todoTime" style="flex:2; padding:5px; font-size:13px; text-align:left;">
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;gap:8px; margin-bottom:8px;">
+                        <input type="date" id="todoDate" style="flex:3; padding:8px; font-size:14px; text-align:left;">
+                        <input type="time" id="todoTime" style="flex:2; padding:8px; font-size:14px; text-align:left;">
                     </div>
-                    <div class="chips-container" style="margin-top:3px; gap:3px;" id="todoTimeChips"></div>
+                    <div class="chips-container" style="margin-top:6px; gap:6px;" id="todoTimeChips"></div>
                 </div>
                 
-                <!-- 名称和快速任务 -->
-                <input type="text" id="todoTitle" placeholder="名称" style="margin-bottom:4px; padding:5px; font-size:14px; text-align:left;">
-                <div class="chips-container" style="margin-bottom:5px; gap:3px;" id="todoTaskChips"></div>
+                <!-- 名称和备注 -->
+                <input type="text" id="todoTitle" placeholder="名称" style="margin-bottom:8px; padding:8px; font-size:15px; text-align:left;">
+                <textarea id="todoNote" placeholder="备注" rows="1" style="margin-bottom:8px; padding:8px; font-size:14px; min-height:48px; resize:none; text-align:left;"></textarea>
+                <div class="chips-container" style="margin-bottom:10px; gap:6px;" id="todoTaskChips"></div>
 
                 <!-- 类型和重要性 -->
-                <div class="chips-container" style="margin-bottom:5px; gap:3px;" id="todoTypeImportanceChips"></div>
+                <div class="chips-container" style="margin-bottom:10px; gap:6px;" id="todoTypeImportanceChips"></div>
                 <input type="hidden" id="todoType" value="do">
                 <input type="hidden" id="todoImportance" value="1">
 
                 <!-- 奖励/惩罚和提交按钮 -->
-                <div style="display:flex; gap:5px; align-items:flex-start; margin-bottom:5px;">
-                    <div style="flex:1; display:flex; flex-direction:column; gap:3px;">
-                        <div style="display:flex; gap:5px;">
-                            <input type="number" id="todoReward" placeholder="奖励" value="1" style="flex:1; padding:5px; font-size:13px; border-color:var(--success); text-align:left; width:0;">
-                            <input type="number" id="todoPenalty" placeholder="惩罚" value="1" style="flex:1; padding:5px; font-size:13px; border-color:var(--danger); text-align:left; width:0;">
+                <div style="display:flex; gap:8px; align-items:flex-start;">
+                    <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                        <div style="display:flex; gap:8px;">
+                            <input type="number" id="todoReward" placeholder="奖励" value="1" style="flex:1; padding:8px; font-size:14px; border-color:var(--success); text-align:left; width:0;">
+                            <input type="number" id="todoPenalty" placeholder="惩罚" value="1" style="flex:1; padding:8px; font-size:14px; border-color:var(--danger); text-align:left; width:0;">
                         </div>
-                        <div class="chips-container" style="gap:3px;" id="todoFundChips"></div>
+                        <div class="chips-container" style="gap:6px;" id="todoFundChips"></div>
                     </div>
-                    <button id="todoSubmitBtn" class="btn-mini" style="background:var(--primary); color:#fff; height:auto; min-height:36px; width:36px; font-size:18px; flex-shrink:0; padding:0;" onclick="saveTodo()">+</button>
+                    <button id="todoSubmitBtn" class="btn-mini" style="background:var(--primary); color:#fff; height:auto; min-height:48px; width:48px; font-size:22px; flex-shrink:0; padding:0;" onclick="saveTodo()">+</button>
                 </div>
-                
-                <!-- 备注 -->
-                <textarea id="todoNote" placeholder="备注" rows="1" style="padding:5px; font-size:13px; min-height:36px; resize:none; text-align:left;"></textarea>
             </div>
 
             <div id="todoContainer">
