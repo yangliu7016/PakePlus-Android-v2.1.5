@@ -117,8 +117,9 @@
         }
         .notif-timer { background: var(--success-bg); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.2); }
         .notif-pinned { background: var(--time-bg); color: var(--time); border: 1px solid rgba(129, 140, 248, 0.2); }
-        .notif-btn { font-size: 12px; cursor: pointer; opacity: 0.8; }
-        .notif-btn:hover { opacity: 1; }
+        .notif-quick-study { background: var(--primary-bg); color: var(--primary); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .notif-btn { font-size: 12px; cursor: pointer; opacity: 0.9; padding: 4px 12px; border-radius: 6px; transition: all 0.2s; }
+        .notif-btn:hover { opacity: 1; transform: scale(1.05); }
 
         .header-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0;}
         .header-title h1 {
@@ -163,19 +164,19 @@
         .badge-debt { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--border); }
         .badge-time { background: var(--time-bg); color: var(--time); border: 1px solid var(--border); }
 
-        .container { max-width: 500px; margin: 20px auto; padding: 0 16px; position: relative; z-index: 1; }
+        .container { max-width: 500px; margin: 16px auto; padding: 0 16px; position: relative; z-index: 1; }
         .card {
             background: var(--bg-card);
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 20px;
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
         }
-        .card-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
 
-        .toggle-container { display: flex; background: var(--border); padding: 4px; border-radius: 14px; margin-bottom: 20px; }
-        .toggle-btn { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 700; color: var(--text-sub); border-radius: 12px; cursor: pointer; transition: all 0.3s; }
+        .toggle-container { display: flex; background: var(--border); padding: 4px; border-radius: 12px; margin-bottom: 16px; }
+        .toggle-btn { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 700; color: var(--text-sub); border-radius: 10px; cursor: pointer; transition: all 0.3s; }
         .toggle-btn.active { background: var(--bg-card); color: var(--primary); box-shadow: var(--shadow); }
 
         .week-btn {
@@ -189,15 +190,15 @@
             box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
         }
 
-        .input-group { margin-bottom: 16px; }
-        .input-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-sub); margin-bottom: 8px; font-weight: 600;}
+        .input-group { margin-bottom: 14px; }
+        .input-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600;}
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
         input, select, textarea {
-            width: 100%; padding: 14px;
+            width: 100%; padding: 12px;
             border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             background: var(--input-bg);
             color: var(--text-main);
             font-weight: 600;
@@ -209,10 +210,10 @@
 
         button { user-select: none; -webkit-tap-highlight-color: transparent; }
         .btn-calc {
-            width: 100%; padding: 16px; border: none;
-            border-radius: 14px;
+            width: 100%; padding: 14px; border: none;
+            border-radius: 12px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white; font-size: 16px; font-weight: 700;
+            color: white; font-size: 15px; font-weight: 700;
             cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
             margin-top: 12px;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
@@ -226,12 +227,12 @@
         [data-theme="dark"] .btn-prevent { background: rgba(55, 48, 163, 0.4); color: #818cf8; border-color: #4338ca; }
 
         .list-item {
-            padding: 16px; border: 1px solid var(--border);
+            padding: 14px; border: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
             position: relative;
             background: var(--input-bg);
-            border-radius: 12px;
-            margin-bottom: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
         }
         .list-item:last-child { margin-bottom: 0; }
         
@@ -252,11 +253,11 @@
         }
 
         .btn-action {
-            width: 32px; height: 32px; border-radius: 50%;
+            width: 24px; height: 24px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: var(--text-sub); margin-left: 4px;
+            cursor: pointer; color: var(--text-sub); margin-left: 3px;
             background: var(--input-bg); transition: all 0.2s;
-            font-size: 14px; font-weight: bold; border: 1px solid transparent; flex-shrink: 0;
+            font-size: 12px; font-weight: normal; border: 1px solid transparent; flex-shrink: 0;
         }
         .btn-action:hover { background: var(--border); }
         .btn-edit:hover { background: var(--info); color: #fff; }
@@ -290,18 +291,19 @@
         .todo-section-title.show { display: flex; }
 
         .todo-item {
-            padding: 12px; border: 1px solid var(--border);
-            border-radius: 12px; margin-bottom: 10px;
+            padding: 10px 12px; border: 1px solid var(--border);
+            border-radius: 10px; margin-bottom: 8px;
             display: flex; justify-content: space-between; align-items: center;
             background: var(--bg-card); transition: all 0.3s ease; position: relative;
         }
-        .todo-do { border-left: 4px solid var(--success); }
-        .todo-dont { border-left: 4px solid var(--danger); }
-        .todo-other { border-left: 4px solid var(--info); }
+        .todo-do { border-left: 2px solid var(--success); }
+        .todo-dont { border-left: 2px solid var(--danger); }
+        .todo-other { border-left: 2px solid var(--info); }
 
         .todo-expired-item { opacity: 0.6; background: var(--border); filter: grayscale(1); }
 
-        .todo-check { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #d1d5db; display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--success); font-weight:bold;}
+        .todo-check { width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--success); font-size: 14px; opacity: 0.7; transition: opacity 0.2s; flex-shrink: 0;}
+        .todo-check:hover { opacity: 1; }
         .click-anim { animation: press 0.3s ease-out; }
         @keyframes press { 0% { transform: scale(1); } 50% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
@@ -346,16 +348,16 @@
         .review-history-label { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
 
         .tab-bar {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 460px; background: var(--header-bg); backdrop-filter: blur(20px);
-            border-radius: 24px; display: flex; padding: 12px 20px;
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15); z-index: 1000;
+            position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 460px; background: var(--header-bg); backdrop-filter: blur(10px);
+            border-radius: 12px; display: flex; padding: 8px 12px;
+            box-shadow: 0 4px 12px -4px rgba(0,0,0,0.1); z-index: 1000;
             border: 1px solid var(--border); justify-content: space-between;
-            padding-bottom: calc(12px + var(--safe-area-bottom));
+            padding-bottom: calc(8px + var(--safe-area-bottom));
         }
-        .tab { text-align: center; color: var(--text-sub); cursor: pointer; font-size: 10px; flex: 1; padding: 4px 0; }
-        .tab.active { color: var(--primary); transform: translateY(-2px); }
-        .tab-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+        .tab { text-align: center; color: var(--text-sub); cursor: pointer; font-size: 10px; flex: 1; padding: 2px 0; transition: all 0.2s; }
+        .tab.active { color: var(--primary); }
+        .tab-icon { font-size: 18px; display: block; margin-bottom: 1px; }
 
         .page { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
         .page.active { display: block; opacity: 1; transform: translateY(0); }
@@ -473,9 +475,11 @@
             border-color: var(--success);
         }
         .interface-option input[type="checkbox"] {
-            width: 20px; height: 20px;
-            cursor: pointer;
-            accent-color: var(--success);
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
         }
         .interface-option-label {
             flex: 1; font-size: 14px; font-weight: 600;
@@ -525,22 +529,34 @@
     </div>
 
     <div id="stickyNotifBar" class="sticky-notif-bar">
+        <!-- 学习快速按钮 -->
+        <div id="notifQuickStudy" class="notif-item notif-quick-study" style="display:none;">
+            <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                <span style="font-weight:600; color:var(--primary); font-size:14px;">📚 学习</span>
+                <span id="notifStudyTime" style="font-size:12px; color:var(--text-sub); opacity:0.8; font-family:monospace;">0.0h</span>
+            </div>
+            <div class="notif-btn" style="background:var(--primary); color:#fff; font-weight:600; padding:6px 16px;" onclick="quickStartStudy()">开始</div>
+        </div>
         <!-- 计时状态 -->
         <div id="notifTimer" class="notif-item notif-timer" style="display:none;">
             <div style="display:flex; align-items:center; gap:8px;">
-                <span>⏱️ 正在计时: <span id="notifTimerName">任务</span></span>
+                <span id="notifTimerName">任务</span>
                 <span id="notifTimerClock" style="font-family: monospace; font-size:14px;">00:00:00</span>
             </div>
-            <div class="notif-btn" onclick="switchPage('timer')">去查看 ➔</div>
+            <div style="display:flex; gap:8px;">
+                <div class="notif-btn" id="notifTimerPauseBtn" onclick="toggleTimerPause()">⏸️</div>
+                <div class="notif-btn" onclick="stopTimer()">⏹️</div>
+                <div class="notif-btn" onclick="switchPage('timer')">查看</div>
+            </div>
         </div>
         <!-- 置顶任务 -->
         <div id="notifPinned" class="notif-item notif-pinned" style="display:none;">
             <div style="display:flex; align-items:center; gap:8px;">
-                <span>📌 置顶计划: <span id="notifPinnedName">计划名</span></span>
+                <span>置顶计划: <span id="notifPinnedName">计划名</span></span>
                 <span id="notifPinnedTime" style="font-size:11px; opacity:0.8;"></span>
             </div>
             <div style="display:flex; gap:12px;">
-                <div class="notif-btn" onclick="startPinnedTask()">▶️ 开始</div>
+                <div class="notif-btn" onclick="startPinnedTask()">开始</div>
                 <div class="notif-btn" onclick="unpinTask()">✕</div>
             </div>
         </div>
@@ -550,8 +566,8 @@
     <div id="page-checkin" class="container page active">
 
         <div class="toggle-container">
-            <div id="btn-view-checkin" class="toggle-btn active" onclick="toggleHomeView('checkin')">☀️ 晨间打卡</div>
-            <div id="btn-view-todo" class="toggle-btn" onclick="toggleHomeView('todo')">📝 今日待办</div>
+            <div id="btn-view-checkin" class="toggle-btn active" onclick="toggleHomeView('checkin')">晨间打卡</div>
+            <div id="btn-view-todo" class="toggle-btn" onclick="toggleHomeView('todo')">今日待办</div>
         </div>
 
         <!-- A. 打卡视图 -->
@@ -559,25 +575,25 @@
             <!-- 补救提示卡片 -->
             <div id="pendingCard" class="card" style="background:var(--warning-bg); border-color:var(--warning); display:none; position:relative;">
                 <div class="close-pending" onclick="closePendingCard()">✕</div>
-                <div style="font-size:13px; font-weight:800; color:var(--warning); margin-bottom:8px;">🔥 待执行补救措施</div>
+                <div style="font-size:13px; font-weight:800; color:var(--warning); margin-bottom:8px;">待执行补救措施</div>
                 <div id="pendingText" style="font-weight:600; color:var(--text-main); font-size:15px; line-height:1.4;"></div>
             </div>
 
             <!-- 时间兑换卡片 -->
             <div id="exchangeCard" class="exchange-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <div style="font-weight:800; color:var(--time);">⏳ 时间银行兑换</div>
+                    <div style="font-weight:800; color:var(--time);">时间银行兑换</div>
                     <div class="btn-action" onclick="toggleExchangeCard()">✕</div>
                 </div>
-                <div style="font-size:13px; color:var(--text-sub); margin-bottom:12px;">当前汇率: 1小时 = <span id="rateDisplay">5</span> 元</div>
+                <div style="font-size:13px; color:var(--text-sub); margin-bottom:12px;">1小时 = <span id="rateDisplay">5</span> 元</div>
                 <div style="display:flex; gap:8px;">
-                    <input type="number" id="exchangeHours" placeholder="兑换小时数" style="flex:1;">
-                    <button class="btn-mini" style="background:var(--time); color:#fff; width:auto;" onclick="executeExchange()">💰 兑换</button>
+                    <input type="number" id="exchangeHours" placeholder="小时数" style="flex:1;">
+                    <button class="btn-mini" style="background:var(--time); color:#fff; width:auto;" onclick="executeExchange()">兑换</button>
                 </div>
             </div>
 
             <div class="card" id="inputCard">
-                <div class="card-title">📝 晨间打卡 <span id="dayTypeBadge" style="display:none;background:var(--info);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;">🏖️ 周末</span></div>
+                <div class="card-title">打卡 <span id="dayTypeBadge" style="display:none;background:var(--info);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;">周末</span></div>
                 <div class="input-group">
                     <label class="input-label">日期</label>
                     <input type="date" id="dateInput" onchange="checkDateChange()">
@@ -587,22 +603,22 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="input-group"><label class="input-label">昨晚入睡 <span id="targetSleep" style="opacity:0.6;font-weight:normal"></span></label><input type="time" id="sleepInput" value="00:00"></div>
-                    <div class="input-group"><label class="input-label">今早起床 <span id="targetWake" style="opacity:0.6;font-weight:normal"></span></label><input type="time" id="wakeInput" value="08:30"></div>
+                    <div class="input-group"><label class="input-label">入睡 <span id="targetSleep" style="opacity:0.6;font-weight:normal"></span></label><input type="time" id="sleepInput" value="00:00"></div>
+                    <div class="input-group"><label class="input-label">起床 <span id="targetWake" style="opacity:0.6;font-weight:normal"></span></label><input type="time" id="wakeInput" value="08:30"></div>
                 </div>
-                <div class="input-group"><label class="input-label">昨日专注时长 (h)</label><input type="number" step="0.1" id="studyInput" placeholder="输入昨日学习/专注总时长"></div>
+                <div class="input-group"><label class="input-label">专注 (h)</label><input type="number" step="0.1" id="studyInput" placeholder="时长"></div>
                 
                 <div id="strategyArea" class="chips-container" style="margin-bottom:15px;"></div>
 
                 <div id="manualInputs" style="display:none; margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
-                    <div class="input-group"><label class="input-label">补偿/补救金额 (元)</label><input type="number" id="manualPenalty" placeholder="0"></div>
-                    <div class="input-group"><label class="input-label">补偿原因</label><textarea id="manualReason" placeholder="例如：晚起补救"></textarea></div>
+                    <div class="input-group"><label class="input-label">金额 (元)</label><input type="number" id="manualPenalty" placeholder="0"></div>
+                    <div class="input-group"><label class="input-label">原因</label><textarea id="manualReason" placeholder="原因"></textarea></div>
                 </div>
 
-                <button class="btn-calc" onclick="calculateCheckin()">⚡ 智能诊断</button>
+                <button class="btn-calc" onclick="calculateCheckin()">⚡ 诊断</button>
                 <div class="row" style="margin-top: 12px;">
-                    <button class="btn-calc btn-secondary" style="margin-top:0" onclick="applyRest()">☕ 申请休息</button>
-                    <button class="btn-calc btn-prevent" style="margin-top:0" onclick="applyPrevent()">🛡️ 主动干预</button>
+                    <button class="btn-calc btn-secondary" style="margin-top:0" onclick="applyRest()">☕ 休息</button>
+                    <button class="btn-calc btn-prevent" style="margin-top:0" onclick="applyPrevent()">🛡️ 干预</button>
                 </div>
             </div>
 
@@ -615,25 +631,25 @@
             <div class="card" style="padding:16px; border-color:var(--primary);">
                 <input type="hidden" id="editingId">
                 <div style="margin-bottom:8px;">
-                    <div style="font-size:11px;color:var(--text-sub);margin-bottom:4px;font-weight:600;">截止时间</div>
+                    <div style="font-size:11px;color:var(--text-sub);margin-bottom:4px;font-weight:600;">截止</div>
                     <div style="display:flex;gap:8px;">
                         <input type="date" id="todoDate" style="flex:3">
                         <input type="time" id="todoTime" style="flex:2">
                     </div>
                     <div class="chips-container" style="margin-top:8px;" id="todoTimeChips"></div>
                 </div>
-                <input type="text" id="todoTitle" placeholder="事项名称" style="margin-bottom:8px;">
+                <input type="text" id="todoTitle" placeholder="名称" style="margin-bottom:8px;">
                 <div class="chips-container" style="margin-bottom:8px;" id="todoTaskChips"></div>
-                <textarea id="todoNote" placeholder="详细备注" rows="2" style="margin-bottom:8px; font-weight:normal; font-size:14px;"></textarea>
+                <textarea id="todoNote" placeholder="备注" rows="2" style="margin-bottom:8px; font-weight:normal; font-size:14px;"></textarea>
 
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
                     <select id="todoType" style="flex:1.2; padding:10px;" onchange="checkTodoTypeChange()">
-                        <option value="do">🟢 去做</option>
-                        <option value="dont">🔴 不做</option>
-                        <option value="other">🔵 其它</option>
+                        <option value="do">✅ 去做</option>
+                        <option value="dont">❌ 不做</option>
+                        <option value="other">⚪ 其它</option>
                     </select>
                     <select id="todoImportance" style="flex:1; padding:10px; border-color:var(--primary);">
-                        <option value="1">🟢 普通</option>
+                        <option value="1">⚪ 普通</option>
                         <option value="2">🟡 中等</option>
                         <option value="3">🔴 重要</option>
                     </select>
@@ -642,8 +658,8 @@
                 <div style="display:flex; gap:8px; align-items:center;">
                     <div style="display:flex; flex:2; gap:4px; flex-direction: column;">
                         <div style="display:flex; gap:4px;">
-                            <input type="number" id="todoReward" placeholder="愿望金" value="1" style="border-color:var(--success);">
-                            <input type="number" id="todoPenalty" placeholder="惩罚金" value="1" style="border-color:var(--danger);">
+                            <input type="number" id="todoReward" placeholder="奖励" value="1" style="border-color:var(--success);">
+                            <input type="number" id="todoPenalty" placeholder="惩罚" value="1" style="border-color:var(--danger);">
                         </div>
                         <div class="chips-container" style="margin-top:4px;" id="todoFundChips"></div>
                     </div>
@@ -651,21 +667,18 @@
                     <!-- 统一的操作按钮 -->
                     <button id="todoSubmitBtn" class="btn-mini" style="background:var(--primary); color:#fff; height:46px; width:46px; font-size:20px;" onclick="saveTodo()">+</button>
                 </div>
-
-                <div style="margin-top:10px; text-align:right;">
-                </div>
             </div>
 
             <div id="todoContainer">
-                <div id="head-do" class="todo-section-title">🟢 必须完成 (Do)</div>
+                <div id="head-do" class="todo-section-title">必须完成 (Do)</div>
                 <div id="list-do"></div>
-                <div id="head-dont" class="todo-section-title">🔴 禁止行为 (Don't)</div>
+                <div id="head-dont" class="todo-section-title">禁止行为 (Don't)</div>
                 <div id="list-dont"></div>
-                <div id="head-other" class="todo-section-title">🔵 其它杂项 (Other)</div>
+                <div id="head-other" class="todo-section-title">其它</div>
                 <div id="list-other"></div>
                 <div id="head-expired" class="todo-section-title">
-                    ⏰ 已结束 / 历史归档
-                    <button class="btn-nuke" onclick="nukeExpiredTodos()">🗑️ 清空</button>
+                    已结束
+                    <button class="btn-nuke" onclick="nukeExpiredTodos()">清空</button>
                 </div>
                 <div id="list-expired"></div>
                 <div id="empty-todo-hint" style="text-align:center;color:var(--text-sub);padding:30px;display:none;">今日及未来暂无待办</div>
@@ -677,7 +690,7 @@
     <div id="page-stats" class="container page">
         <div class="card">
             <div class="card-title">
-                <span>📊 数据概览</span>
+                <span>数据概览</span>
                 <select id="statPeriod" onchange="renderStats()" style="width:auto; padding:4px 8px; font-size:12px; height:32px;">
                     <option value="7">最近7天</option>
                     <option value="30">最近30天</option>
@@ -695,29 +708,29 @@
 
             <div class="heatmap-container" id="heatmap"></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;">
-                <div style="background:var(--input-bg);padding:15px;border-radius:12px;"><div class="stat-num" id="statStudy" style="font-weight:bold;font-size:20px;">0h</div><div style="font-size:12px;color:var(--text-sub)">阶段专注</div></div>
-                <div style="background:var(--input-bg);padding:15px;border-radius:12px;"><div class="stat-num" id="statRate" style="font-weight:bold;font-size:20px;">0%</div><div style="font-size:12px;color:var(--text-sub)">完美率</div></div>
+                <div style="background:var(--input-bg);padding:15px;border-radius:12px;"><div class="stat-num" id="statStudy" style="font-weight:bold;font-size:20px;">0h</div><div style="font-size:12px;color:var(--text-sub)">专注</div></div>
+                <div style="background:var(--input-bg);padding:15px;border-radius:12px;"><div class="stat-num" id="statRate" style="font-weight:bold;font-size:20px;">0%</div><div style="font-size:12px;color:var(--text-sub)">完美</div></div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">⏱️ 专注统计</div>
+            <div class="card-title">专注统计</div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px;">
                 <div style="background:var(--input-bg); padding:12px; border-radius:12px; text-align:center;">
                     <div style="font-size:18px; font-weight:bold; color:var(--primary);" id="statTimerTotal">0h</div>
-                    <div style="font-size:11px; color:var(--text-sub);">总计时时长</div>
+                    <div style="font-size:11px; color:var(--text-sub);">总时长</div>
                 </div>
                 <div style="background:var(--input-bg); padding:12px; border-radius:12px; text-align:center;">
                     <div style="font-size:18px; font-weight:bold; color:var(--success);" id="statTimerToday">0h</div>
-                    <div style="font-size:11px; color:var(--text-sub);">今日时长</div>
+                    <div style="font-size:11px; color:var(--text-sub);">今日</div>
                 </div>
                 <div style="background:var(--input-bg); padding:12px; border-radius:12px; text-align:center;">
                     <div style="font-size:18px; font-weight:bold; color:var(--warning);" id="statTimerCount">0</div>
-                    <div style="font-size:11px; color:var(--text-sub);">计时次数</div>
+                    <div style="font-size:11px; color:var(--text-sub);">次数</div>
                 </div>
                 <div style="background:var(--input-bg); padding:12px; border-radius:12px; text-align:center;">
                     <div style="font-size:18px; font-weight:bold; color:var(--time);" id="statTimerAvg">0h</div>
-                    <div style="font-size:11px; color:var(--text-sub);">单次平均</div>
+                    <div style="font-size:11px; color:var(--text-sub);">平均</div>
                 </div>
             </div>
             <div id="statTimerTopTasks" style="font-size:12px; color:var(--text-main);"></div>
@@ -725,13 +738,13 @@
 
         <div id="paySection" class="card" style="background:var(--danger-bg); border-color:var(--danger); text-align:center; display:none;">
             <div style="color:var(--danger); font-weight:800; font-size:28px; margin:10px 0;" id="debtAmount">0</div>
-            <div style="color:var(--danger); font-size:13px; margin-bottom:15px; opacity:0.8;">待罚公益金 (To-Do失败/打卡惩罚)</div>
-            <button class="btn-calc" style="background:var(--danger); width:auto; margin:0 auto;" onclick="document.getElementById('fileInput').click()">📸 上传凭证并清零</button>
+            <div style="color:var(--danger); font-size:13px; margin-bottom:15px; opacity:0.8;">待罚公益金</div>
+            <button class="btn-calc" style="background:var(--danger); width:auto; margin:0 auto;" onclick="document.getElementById('fileInput').click()">📸 上传凭证</button>
             <input type="file" id="fileInput" hidden accept="image/*" onchange="handlePaymentWithCompress(this)">
         </div>
 
         <div class="card">
-            <div class="card-title">📜 历史档案 <button class="btn-mini btn-secondary" onclick="exportCSV()">导出CSV</button></div>
+            <div class="card-title">历史档案 <button class="btn-mini btn-secondary" onclick="exportCSV()">📤 导出</button></div>
             <div id="historyList"></div>
         </div>
     </div>
@@ -740,24 +753,24 @@
     <div id="page-shop" class="container page">
         <div class="card" style="background: var(--bg-card); border: 1px solid var(--warning);">
             <div class="card-title" style="color:var(--warning)">
-                <span>🎁 愿望商店</span>
+                <span>愿望商店</span>
                 <div style="display:flex; gap:6px; align-items:center;">
                      <button class="btn-mini" style="background:transparent; border:1px solid var(--warning); color:var(--warning);" onclick="sortShopByPrice()">💰 按价格排序</button>
                      <span id="shopPrivacyBtn" style="cursor:pointer; font-size:20px; padding:4px;" onclick="toggleShopPrivacy()">🔒</span>
                 </div>
             </div>
             <div style="text-align:center; margin-bottom:15px; font-size:14px; color:var(--text-sub);">
-                可用愿望金: <span id="shopWalletDisplay" style="font-weight:bold; font-size:18px; color:var(--warning);">0</span> 元
+                可用: <span id="shopWalletDisplay" style="font-weight:bold; font-size:18px; color:var(--warning);">0</span> 元
             </div>
             <div class="row" style="grid-template-columns: 2fr 1fr;">
-                <input type="text" id="wishName" placeholder="商品名称">
+                <input type="text" id="wishName" placeholder="名称">
                 <input type="number" id="wishCost" placeholder="价格">
             </div>
             <label id="wishHiddenLabel" class="privacy-check-label" onclick="togglePrivacyCheck()">
-                <input type="checkbox" id="wishHidden"> 设为私密商品
+                <input type="checkbox" id="wishHidden"> 私密
             </label>
-            <button id="btnShopAdd" class="btn-calc" style="background:var(--warning);" onclick="addWish()">➕ 上架新愿望</button>
-            <button id="btnShopCancel" class="btn-calc btn-secondary" style="display:none; margin-top:8px;" onclick="cancelShopEdit()">取消编辑</button>
+            <button id="btnShopAdd" class="btn-calc" style="background:var(--warning);" onclick="addWish()">+ 上架</button>
+            <button id="btnShopCancel" class="btn-calc btn-secondary" style="display:none; margin-top:8px;" onclick="cancelShopEdit()">✕ 取消</button>
         </div>
 
         <div class="card">
@@ -768,62 +781,62 @@
     <!-- 4. 设置 -->
     <div id="page-settings" class="container page">
         <div class="card">
-            <div class="card-title">⚙️ 基础目标</div>
+            <div class="card-title">目标</div>
              <div class="row"><div class="input-group"><label class="input-label">平日起床</label><input type="time" id="setWake"></div><div class="input-group"><label class="input-label">平日入睡</label><input type="time" id="setSleep"></div></div>
             <div class="row"><div class="input-group"><label class="input-label">周末起床</label><input type="time" id="setWakeW"></div><div class="input-group"><label class="input-label">周末入睡</label><input type="time" id="setSleepW"></div></div>
             
             <div class="row">
                 <div class="input-group">
-                    <label class="input-label">每日专注 (h)</label>
+                    <label class="input-label">专注 (h)</label>
                     <input type="number" id="setStudy">
                 </div>
                 <div class="input-group">
-                    <label class="input-label">⏰ 归档显示数</label>
+                    <label class="input-label">归档数</label>
                     <input type="number" id="setExpiredLimit" min="1" max="50">
                 </div>
             </div>
             <div class="row">
                 <div class="input-group">
-                    <label class="input-label">🕒 计时历史数</label>
+                    <label class="input-label">计时数</label>
                     <input type="number" id="setTimerLimit" min="1" max="50">
                 </div>
                 <div class="input-group">
-                    <label class="input-label">📜 历史档案数</label>
+                    <label class="input-label">档案数</label>
                     <input type="number" id="setHistoryLimit" min="1" max="50">
                 </div>
             </div>
             <div class="input-group">
-                <label class="input-label">🏠 起始页</label>
+                <label class="input-label">首页</label>
                 <select id="setInitialPage" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-main);">
-                    <option value="checkin">✨ 主页 (打卡)</option>
-                    <option value="timer">⏱️ 计时页</option>
+                    <option value="checkin">打卡</option>
+                    <option value="timer">计时</option>
                 </select>
             </div>
 
             <div class="input-group" style="margin-top:12px;border-top:1px dashed var(--border);padding-top:12px;">
-                <label class="input-label">📅 周末定义</label>
+                <label class="input-label">周末</label>
                 <div style="display:flex; gap:12px;">
                     <div id="btn_week_6" class="week-btn" onclick="toggleWeek(6)">周六</div>
                     <div id="btn_week_0" class="week-btn" onclick="toggleWeek(0)">周日</div>
                 </div>
             </div>
-             <button class="btn-calc" style="background:var(--text-main); margin-top:20px;" onclick="saveSettings()">💾 保存所有配置</button>
+             <button class="btn-calc" style="background:var(--text-main); margin-top:20px;" onclick="saveSettings()">💾 保存</button>
         </div>
 
         <div class="card">
-            <div class="card-title">💰 奖惩体系 (元)</div>
+            <div class="card-title">奖惩 (元)</div>
             <div class="row" style="margin-bottom:12px;">
                 <div class="input-group" style="padding:12px; border-radius:12px; border:1px solid var(--warning); margin-bottom:0;">
-                    <label class="input-label" style="color:var(--warning); margin-bottom:4px;">🏆 晨间达标奖励</label>
+                    <label class="input-label" style="color:var(--warning); margin-bottom:4px;">达标奖励</label>
                     <input type="number" id="rewardAmount" value="5">
                 </div>
                 <div class="input-group" style="padding:12px; border-radius:12px; border:1px solid var(--time); margin-bottom:0;">
-                    <label class="input-label" style="color:var(--time); margin-bottom:4px;">⏳ 时间兑换汇率 (元/h)</label>
+                    <label class="input-label" style="color:var(--time); margin-bottom:4px;">汇率 (元/h)</label>
                     <input type="number" id="exchangeRate" value="5">
                 </div>
             </div>
 
-            <div style="font-size:12px; font-weight:700; color:var(--danger); margin:15px 0 8px 0; text-transform:uppercase;">惩罚阶梯 (左轻微 / 右严重)</div>
+            <div style="font-size:12px; font-weight:700; color:var(--danger); margin:15px 0 8px 0; text-transform:uppercase;">惩罚阶梯</div>
             <div class="row" style="margin-bottom:10px;">
                 <div><span style="font-size:11px;color:var(--text-sub)">起床&lt;30m</span><input type="number" id="pWakeS"></div>
                 <div><span style="font-size:11px;color:var(--text-sub)">起床≥30m</span><input type="number" id="pWakeL"></div>
@@ -838,136 +851,132 @@
             </div>
 
              <div class="input-group" style="margin-top:10px;">
-                <label class="input-label">🛡️ 预防模式扣费</label>
+                <label class="input-label">预防扣费</label>
                 <input type="number" id="preventCost" value="10">
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">⏱️ 计时快捷项</div>
+            <div class="card-title">快捷项</div>
             <div class="input-group">
-                <label class="input-label">自定义快捷任务</label>
+                <label class="input-label">快捷任务</label>
                 <div class="chips-container" id="setQuickTasksList"></div>
                 <div style="display:flex;gap:8px;margin-top:8px;">
-                    <input id="input_quicktask" placeholder="例如: 📚 深度阅读">
-                    <button class="btn-mini" onclick="addQuickTask()">➕</button>
+                    <input id="input_quicktask" placeholder="任务名称">
+                    <button class="btn-mini" onclick="addQuickTask()">+</button>
                 </div>
             </div>
             <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">
-                <div style="font-size:11px;color:var(--text-sub);margin-bottom:8px;">💡 提示：快选项会按使用频次自动排序，常用的排在前面</div>
-                <button class="btn-mini btn-secondary" style="width:100%;" onclick="resetTaskUsage()">🔄 重置所有使用频次</button>
+                <div style="font-size:11px;color:var(--text-sub);margin-bottom:8px;">按使用频次自动排序</div>
+                <button class="btn-mini btn-secondary" style="width:100%;" onclick="resetTaskUsage()">🔄 重置频次</button>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">🛡️ 补救策略库 (自定义)</div>
+            <div class="card-title">补救策略</div>
             <div class="input-group">
-                <label class="input-label">⏰ 早起失败补救</label>
+                <label class="input-label">早起补救</label>
                 <div class="chips-container" id="list_wake"></div>
                 <div style="display:flex;gap:8px;margin-top:8px;">
-                    <input id="input_wake" placeholder="例如: 罚站10分钟">
-                    <button class="btn-mini" onclick="addStrat('wake')">➕</button>
+                    <input id="input_wake" placeholder="补救措施">
+                    <button class="btn-mini" onclick="addStrat('wake')">+</button>
                 </div>
             </div>
             <div class="input-group">
-                <label class="input-label">🛌 晚睡补救措施</label>
+                <label class="input-label">晚睡补救</label>
                 <div class="chips-container" id="list_sleep"></div>
                 <div style="display:flex;gap:8px;margin-top:8px;">
-                    <input id="input_sleep" placeholder="例如: 没收手机">
-                    <button class="btn-mini" onclick="addStrat('sleep')">➕</button>
+                    <input id="input_sleep" placeholder="补救措施">
+                    <button class="btn-mini" onclick="addStrat('sleep')">+</button>
                 </div>
             </div>
             <div class="input-group">
-                <label class="input-label">⚡ 专注不足补救</label>
+                <label class="input-label">专注补救</label>
                 <div class="chips-container" id="list_study"></div>
                 <div style="display:flex;gap:8px;margin-top:8px;">
-                    <input id="input_study" placeholder="例如: 周末补回">
-                    <button class="btn-mini" onclick="addStrat('study')">➕</button>
+                    <input id="input_study" placeholder="补救措施">
+                    <button class="btn-mini" onclick="addStrat('study')">+</button>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">📋 时间快选配置</div>
-            <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">自定义待办和计时的时间快选胶囊（两者共享）</div>
+            <div class="card-title">时间快选</div>
             <div class="input-group">
-                <label class="input-label">当前快选胶囊</label>
                 <div class="chips-container" id="todoTimeChipsSettingsList"></div>
             </div>
             <div style="display:flex; gap:8px; margin-top:12px;">
-                <button class="btn-calc btn-secondary" style="flex:1; margin-top:0;" onclick="addTodoTimeChip('offset')">⏰ 添加偏移时间</button>
-                <button class="btn-calc btn-secondary" style="flex:1; margin-top:0;" onclick="addTodoTimeChip('fixed')">🕐 添加固定时间</button>
+                <button class="btn-calc btn-secondary" style="flex:1; margin-top:0;" onclick="addTodoTimeChip('offset')">⏰ 偏移时间</button>
+                <button class="btn-calc btn-secondary" style="flex:1; margin-top:0;" onclick="addTodoTimeChip('fixed')">🕐 固定时间</button>
             </div>
             <div style="margin-top:8px;">
-                <button class="btn-mini btn-secondary" style="width:100%;" onclick="resetTodoTimeChips()">🔄 恢复默认快选</button>
+                <button class="btn-mini btn-secondary" style="width:100%;" onclick="resetTodoTimeChips()">🔄 恢复默认</button>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">👁️ 界面显示配置</div>
-            <div style="font-size:12px; color:var(--text-sub); margin-bottom:16px;">选择要显示的功能模块，取消勾选后对应页面将隐藏</div>
+            <div class="card-title">界面配置</div>
             <div style="display:flex; flex-direction:column; gap:12px;">
                 <label class="interface-option" id="label-showTimer">
                     <input type="checkbox" id="showTimer" onchange="updateInterfaceOption('showTimer')">
-                    <span class="interface-option-icon">⏱️</span>
                     <span class="interface-option-label">计时页面</span>
                     <span class="interface-option-icon">✓</span>
                 </label>
                 <label class="interface-option" id="label-showStats">
                     <input type="checkbox" id="showStats" onchange="updateInterfaceOption('showStats')">
-                    <span class="interface-option-icon">📊</span>
                     <span class="interface-option-label">统计页面</span>
                     <span class="interface-option-icon">✓</span>
                 </label>
                 <label class="interface-option" id="label-showShop">
                     <input type="checkbox" id="showShop" onchange="updateInterfaceOption('showShop')">
-                    <span class="interface-option-icon">🎁</span>
                     <span class="interface-option-label">商店页面</span>
                     <span class="interface-option-icon">✓</span>
                 </label>
-            </div>
-            <div style="font-size:11px; color:var(--text-sub); margin-top:12px; padding:10px; background:var(--warning-bg); border-radius:8px; border-left:3px solid var(--warning);">
-                💡 提示：主页和设置页面始终显示，无法隐藏
+                <label class="interface-option" id="label-showQuickStudy">
+                    <input type="checkbox" id="showQuickStudy" onchange="updateInterfaceOption('showQuickStudy')">
+                    <span class="interface-option-label">学习快速按钮</span>
+                    <span class="interface-option-icon">✓</span>
+                </label>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">⚙️ GitHub 自动同步</div>
+            <div class="card-title">GitHub同步</div>
             <div class="input-group"><input type="password" id="ghToken" placeholder="Token"></div>
             <div class="input-group"><input type="text" id="ghRepo" placeholder="用户名/仓库名"></div>
             <div class="row">
-                <button class="btn-calc btn-secondary" onclick="saveSettings()">💾 保存并同步</button>
-                <button class="btn-calc btn-secondary" style="background:var(--info); color:#fff; border:none;" onclick="archiveToGitHub()">☁️ 创建永久存档</button>
+                <button class="btn-calc btn-secondary" onclick="saveSettings()">💾 保存同步</button>
+                <button class="btn-calc btn-secondary" style="background:var(--info); color:#fff; border:none;" onclick="archiveToGitHub()">☁️ 创建存档</button>
             </div>
         </div>
 
         <div class="card" style="border: 1px solid var(--info);">
-            <div class="card-title" style="color:var(--info)">☁️ 云端时光机</div>
-            <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">从 GitHub 的 backups 文件夹恢复历史存档。</div>
-            <button class="btn-calc btn-secondary" style="margin-top:0;" onclick="listCloudBackups()">📂 查看云端存档列表</button>
+            <div class="card-title" style="color:var(--info)">云端存档</div>
+            <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">从 GitHub backups 恢复</div>
+            <button class="btn-calc btn-secondary" style="margin-top:0;" onclick="listCloudBackups()">📂 查看列表</button>
             <div id="cloudBackupList" style="margin-top:12px; display:none; max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:12px;"></div>
         </div>
 
         <div class="card">
-            <div class="card-title">🔧 数据手动调节</div>
-            <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">直接修改当前数值以修正错误。修改将被记录至历史档案。</div>
+            <div class="card-title">数据调节</div>
+            <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">修改数值，将记录至历史</div>
             <div class="row">
-                <div class="input-group"><label class="input-label">⏳ 时间银行 (h)</label><input type="number" step="0.1" id="adjTimeBank"></div>
-                <div class="input-group"><label class="input-label">💰 愿望金 (元)</label><input type="number" id="adjWallet"></div>
+                <div class="input-group"><label class="input-label">时间银行 (h)</label><input type="number" step="0.1" id="adjTimeBank"></div>
+                <div class="input-group"><label class="input-label">愿望金 (元)</label><input type="number" id="adjWallet"></div>
             </div>
-            <div class="input-group"><label class="input-label">💸 待罚公益金 (元)</label><input type="number" id="adjDebt"></div>
+            <div class="input-group"><label class="input-label">待罚公益金 (元)</label><input type="number" id="adjDebt"></div>
             <div class="input-group">
-                <label class="input-label">📝 修改原因</label>
-                <input type="text" id="adjReason" placeholder="例如: 记录录入错误">
+                <label class="input-label">修改原因</label>
+                <input type="text" id="adjReason" placeholder="原因">
             </div>
-            <button class="btn-calc" style="background:var(--primary);" onclick="applyManualAdjustment()">💾 应用调整</button>
+            <button class="btn-calc" style="background:var(--primary);" onclick="applyManualAdjustment()">✓ 应用</button>
         </div>
 
         <div class="card">
-            <div class="card-title">💾 数据安全 (JSON)</div>
+            <div class="card-title">数据安全</div>
             <div class="row">
-                <button class="btn-calc btn-secondary" onclick="exportJSON()">📤 本地备份</button>
-                <button class="btn-calc btn-secondary" style="color:var(--success); border-color:var(--success);" onclick="document.getElementById('importFile').click()">📥 恢复数据</button>
+                <button class="btn-calc btn-secondary" onclick="exportJSON()">📤 备份</button>
+                <button class="btn-calc btn-secondary" style="color:var(--success); border-color:var(--success);" onclick="document.getElementById('importFile').click()">📥 恢复</button>
                 <input type="file" id="importFile" hidden accept=".json" onchange="importJSON(this)">
             </div>
         </div>
@@ -976,10 +985,10 @@
     <!-- 计时页面 (新增加) -->
     <div id="page-timer" class="container page">
         <div class="card">
-            <div class="card-title">⏱️ 专注计时</div>
+            <div class="card-title">计时</div>
             <div class="input-group">
-                <label class="input-label">任务名称</label>
-                <input type="text" id="timerTaskName" placeholder="现在想专注做什么？">
+                <label class="input-label">任务</label>
+                <input type="text" id="timerTaskName" placeholder="任务名称">
                 <!-- 快选胶囊 -->
                 <div id="quickTasksContainer" class="chips-container" style="margin-top: 8px;"></div>
             </div>
@@ -988,7 +997,7 @@
             <div id="todoSelectModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
                 <div style="background:var(--bg-card); border-radius:20px; padding:24px; max-width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3); border:1px solid var(--border);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                        <div style="font-weight:800; font-size:18px; color:var(--text-main);">📋 选择待办事项</div>
+                        <div style="font-weight:800; font-size:18px; color:var(--text-main);">选择待办</div>
                         <div class="btn-action" onclick="closeTodoSelectModal()" style="width:32px; height:32px; font-size:18px;">✕</div>
                     </div>
                     <div id="todoSelectList" style="max-height:60vh; overflow-y:auto;"></div>
@@ -1010,31 +1019,27 @@
             
             <div class="input-group">
                 <label class="input-label">备注</label>
-                <textarea id="timerNote" placeholder="记下点什么..." rows="1" style="min-height: 46px;"></textarea>
-            </div>
-
-            <div id="activeTimerDisplay" style="text-align: center; margin: 20px 0;">
-                <div id="timerClock" style="font-size: 48px; font-weight: 800; font-family: monospace; color: var(--primary);">00:00:00</div>
+                <textarea id="timerNote" placeholder="备注" rows="1" style="min-height: 46px;"></textarea>
             </div>
 
             <div id="timerControls">
                 <div id="timerIdleBtns" style="display: flex; gap: 12px; align-items: stretch;">
-                    <button class="btn-calc" style="flex: 2; margin-top: 0;" id="btnTimerStart" onclick="startTimer()">🚀 开始计时</button>
-                    <button class="btn-calc btn-secondary" style="flex: 1; margin-top: 0;" onclick="addPlannedTask()">📅 加入计划</button>
+                    <button class="btn-calc" style="flex: 2; margin-top: 0;" id="btnTimerStart" onclick="startTimer()">▶️ 开始</button>
+                    <button class="btn-calc btn-secondary" style="flex: 1; margin-top: 0;" onclick="addPlannedTask()">📅 计划</button>
                 </div>
                 <div id="timerActiveBtns" style="display: none; gap: 12px; align-items: stretch; flex-wrap: wrap;">
                     <div style="display: flex; gap: 12px; width: 100%;">
                         <button class="btn-calc btn-secondary" id="btnTimerPause" style="flex: 1; margin-top: 0;" onclick="toggleTimerPause()">⏸️ 暂停</button>
-                        <button class="btn-calc btn-danger" style="flex: 1; margin-top: 0;" onclick="stopTimer()">⏹️ 结束并保存</button>
+                        <button class="btn-calc btn-danger" style="flex: 1; margin-top: 0;" onclick="stopTimer()">⏹️ 结束</button>
                     </div>
-                    <button class="btn-calc btn-secondary" style="width: 100%; margin-top: 8px;" onclick="addPlannedTaskWhileRunning()">📅 添加其他计划</button>
+                    <button class="btn-calc btn-secondary" style="width: 100%; margin-top: 8px;" onclick="addPlannedTaskWhileRunning()">+ 添加计划</button>
                 </div>
             </div>
         </div>
 
         <div class="card">
             <div class="card-title">
-                <span>📝 今日复盘</span>
+                <span>复盘</span>
                 <div style="display:flex; gap:8px;">
                     <button class="btn-mini" style="background:var(--info); color:#fff;" onclick="toggleHistoryReview()">📜 历史</button>
                     <button id="btnSaveReview" class="btn-mini" style="background:var(--success); color:#fff;" onclick="saveDailyReview(true)">💾 保存</button>
@@ -1043,12 +1048,12 @@
             
             <div id="reviewInputArea">
                 <div class="input-group">
-                    <label class="input-label">🌟 真棒 (今天做得好的)</label>
-                    <textarea id="reviewGreat" placeholder="记录下今天的成就感..." rows="2"></textarea>
+                    <label class="input-label">做得好的</label>
+                    <textarea id="reviewGreat" placeholder="记录..." rows="2"></textarea>
                 </div>
                 <div class="input-group">
-                    <label class="input-label">🚀 加油 (以后需要改进的)</label>
-                    <textarea id="reviewImprove" placeholder="明天哪里可以做得更好？" rows="2"></textarea>
+                    <label class="input-label">需改进的</label>
+                    <textarea id="reviewImprove" placeholder="改进..." rows="2"></textarea>
                 </div>
             </div>
 
@@ -1060,12 +1065,12 @@
 
         <!-- 计划清单 -->
         <div class="card" id="card-planned-tasks">
-            <div class="card-title">📅 计划清单</div>
+            <div class="card-title">计划</div>
             <div id="plannedTasksList"></div>
         </div>
 
         <div class="card">
-            <div class="card-title">🕒 计时历史</div>
+            <div class="card-title">历史</div>
             <div id="timerHistoryList"></div>
         </div>
     </div>
@@ -1106,7 +1111,7 @@
         penalties: { wakeS: 2, wakeL: 5, sleepS: 2, sleepL: 5, studyS: 5, studyL: 10 }, 
         weekend: [0, 6],
         todoTimeChips: [], // 默认为空数组，使用内置默认快选
-        interface: { showTimer: true, showStats: true, showShop: true } // 默认显示所有界面
+        interface: { showTimer: true, showStats: true, showShop: true, showQuickStudy: true } // 默认显示所有界面
     };
     
     function safeParse(key, defaultVal) {
@@ -1402,7 +1407,7 @@
                 
                 const pauseBtn = document.getElementById('btnTimerPause');
                 if (pauseBtn) {
-                    pauseBtn.innerText = timerPaused ? '▶️ 继续' : '⏸️ 暂停';
+                    pauseBtn.innerText = timerPaused ? '继续' : '暂停';
                 }
                 
                 updateTimerUI();
@@ -1440,6 +1445,150 @@
         }
     }
 
+    /* ================== ✅ 数据合并函数：智能合并本地和云端数据 ================== */
+    function mergeData(cloudData, localData) {
+        if (!cloudData || !localData) return;
+        
+        // 合并历史记录：保留所有唯一记录（按id去重）
+        if (cloudData.data && Array.isArray(cloudData.data)) {
+            const localDataArray = localData.data || [];
+            const localIds = new Set(localDataArray.map(r => r && r.id ? r.id : null).filter(id => id !== null));
+            const cloudIds = new Set(cloudData.data.map(r => r && r.id ? r.id : null).filter(id => id !== null));
+            
+            // 添加云端独有的记录
+            cloudData.data.forEach(record => {
+                if (record && record.id && !localIds.has(record.id)) {
+                    localDataArray.push(record);
+                }
+            });
+            
+            // 按日期和id排序
+            localDataArray.sort((a, b) => {
+                if (!a || !b) return 0;
+                if (a.date !== b.date) return (b.date || '').localeCompare(a.date || '');
+                return (b.id || 0) - (a.id || 0);
+            });
+            
+            historyData = localDataArray;
+        }
+        
+        // 合并待办事项：保留所有唯一待办（按id去重）
+        if (cloudData.todos && Array.isArray(cloudData.todos)) {
+            const localTodosArray = localData.todos || [];
+            const localTodoIds = new Set(localTodosArray.map(t => t && t.id ? t.id : null).filter(id => id !== null));
+            
+            cloudData.todos.forEach(todo => {
+                if (todo && todo.id && !localTodoIds.has(todo.id)) {
+                    localTodosArray.push(todo);
+                }
+            });
+            
+            todoList = localTodosArray;
+        }
+        
+        // 合并愿望清单：保留所有唯一愿望（按名称去重）
+        if (cloudData.wishes && Array.isArray(cloudData.wishes)) {
+            const localWishesArray = localData.wishes || [];
+            const localWishNames = new Set(localWishesArray.map(w => w && w.name ? w.name : null).filter(name => name !== null));
+            
+            cloudData.wishes.forEach(wish => {
+                if (wish && wish.name && !localWishNames.has(wish.name)) {
+                    localWishesArray.push(wish);
+                }
+            });
+            
+            wishList = localWishesArray;
+        }
+        
+        // 合并策略：合并数组
+        if (cloudData.strategies && typeof cloudData.strategies === 'object') {
+            const localStrategies = localData.strategies || {};
+            Object.keys(cloudData.strategies).forEach(key => {
+                if (!localStrategies[key]) {
+                    localStrategies[key] = [];
+                }
+                if (Array.isArray(cloudData.strategies[key])) {
+                    cloudData.strategies[key].forEach(strategy => {
+                        if (strategy && !localStrategies[key].includes(strategy)) {
+                            localStrategies[key].push(strategy);
+                        }
+                    });
+                }
+            });
+            userStrategies = localStrategies;
+        }
+        
+        // 合并计时器记录：保留所有唯一记录
+        if (cloudData.timerRecords && Array.isArray(cloudData.timerRecords)) {
+            const localTimerArray = localData.timerRecords || [];
+            const localTimerIds = new Set(localTimerArray.map(r => r && r.id ? r.id : null).filter(id => id !== null));
+            
+            cloudData.timerRecords.forEach(record => {
+                if (record && record.id && !localTimerIds.has(record.id)) {
+                    localTimerArray.push(record);
+                }
+            });
+            
+            timerRecords = localTimerArray;
+        }
+        
+        // 合并计划任务：保留所有唯一任务
+        if (cloudData.plannedTasks && Array.isArray(cloudData.plannedTasks)) {
+            const localPlansArray = localData.plannedTasks || [];
+            const localPlanIds = new Set(localPlansArray.map(p => p && p.id ? p.id : null).filter(id => id !== null));
+            
+            cloudData.plannedTasks.forEach(task => {
+                if (task && task.id && !localPlanIds.has(task.id)) {
+                    localPlansArray.push(task);
+                }
+            });
+            
+            plannedTasks = localPlansArray;
+        }
+        
+        // 合并每日复盘：保留所有唯一复盘（按日期去重，保留最新的）
+        if (cloudData.dailyReviews && typeof cloudData.dailyReviews === 'object') {
+            const localReviews = localData.dailyReviews || {};
+            Object.keys(cloudData.dailyReviews).forEach(date => {
+                const cloudReview = cloudData.dailyReviews[date];
+                const localReview = localReviews[date];
+                
+                if (!localReview || (cloudReview && cloudReview.timestamp && cloudReview.timestamp > (localReview.timestamp || 0))) {
+                    localReviews[date] = cloudReview;
+                }
+            });
+            dailyReviews = localReviews;
+        }
+        
+        // 合并任务使用计数：取较大值
+        if (cloudData.taskUsageCount && typeof cloudData.taskUsageCount === 'object') {
+            const localUsageCount = localData.taskUsageCount || {};
+            Object.keys(cloudData.taskUsageCount).forEach(task => {
+                const cloudCount = cloudData.taskUsageCount[task] || 0;
+                const localCount = localUsageCount[task] || 0;
+                localUsageCount[task] = Math.max(cloudCount, localCount);
+            });
+            taskUsageCount = localUsageCount;
+        }
+        
+        // 时间银行：取较大值（避免丢失时间）
+        if (cloudData.timeBank !== undefined) {
+            timeBank = Math.max(timeBank, cloudData.timeBank);
+        }
+        
+        // 配置：优先使用本地配置（用户设置不应该被覆盖）
+        // config 保持不变
+        
+        // 置顶任务：如果云端有且本地没有，使用云端的
+        if (cloudData.pinnedTaskId && !pinnedTaskId) {
+            pinnedTaskId = cloudData.pinnedTaskId;
+            localStorage.setItem('habit_pinned_task_id', pinnedTaskId);
+        }
+        
+        // 保存合并后的数据到本地
+        persistAllLocal();
+    }
+    
     /* ================== ✅ 同步修复：剥离图片字段（仅用于云端/拉取写入） ================== */
     function stripImagesFromHistory(arr) {
         if (!Array.isArray(arr)) return [];
@@ -1573,10 +1722,62 @@
         if (!container) return;
         
         const chips = [];
-        chips.push(`<div class="chip" onclick="setTodoFunds(${lastReward}, ${lastPenalty})">上次 ¥${lastReward}/¥${lastPenalty}</div>`);
-        chips.push(`<div class="chip" onclick="setTodoFunds(5, 5)">¥5/¥5</div>`);
-        chips.push(`<div class="chip" onclick="setTodoFunds(10, 10)">¥10/¥10</div>`);
-        chips.push(`<div class="chip" onclick="setTodoFunds(20, 20)">¥20/¥20</div>`);
+        
+        // 统计历史输入中的常用金额
+        const rewardCounts = {};
+        const penaltyCounts = {};
+        const comboCounts = {};
+        
+        todoList.forEach(t => {
+            if (t.reward && t.reward > 0) {
+                rewardCounts[t.reward] = (rewardCounts[t.reward] || 0) + 1;
+            }
+            if (t.penalty && t.penalty > 0) {
+                penaltyCounts[t.penalty] = (penaltyCounts[t.penalty] || 0) + 1;
+            }
+            // 统计组合
+            const combo = `${t.reward || 0}/${t.penalty || 0}`;
+            comboCounts[combo] = (comboCounts[combo] || 0) + 1;
+        });
+        
+        // 找出最常用的奖励和惩罚金额（各取前3个）
+        const topRewards = Object.entries(rewardCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([val]) => parseFloat(val));
+        
+        const topPenalties = Object.entries(penaltyCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([val]) => parseFloat(val));
+        
+        // 找出最常用的组合（取前3个）
+        const topCombos = Object.entries(comboCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([combo]) => {
+                const [r, p] = combo.split('/').map(parseFloat);
+                return { reward: r, penalty: p };
+            });
+        
+        // 添加"上次"选项
+        if (lastReward > 0 || lastPenalty > 0) {
+            chips.push(`<div class="chip" onclick="setTodoFunds(${lastReward}, ${lastPenalty})">上次 ¥${lastReward}/¥${lastPenalty}</div>`);
+        }
+        
+        // 添加最常用的组合（最多3个）
+        topCombos.forEach(combo => {
+            if (combo.reward > 0 || combo.penalty > 0) {
+                chips.push(`<div class="chip" onclick="setTodoFunds(${combo.reward}, ${combo.penalty})">¥${combo.reward}/¥${combo.penalty}</div>`);
+            }
+        });
+        
+        // 如果没有历史数据，显示默认值
+        if (chips.length === 0) {
+            chips.push(`<div class="chip" onclick="setTodoFunds(1, 1)">¥1/¥1</div>`);
+            chips.push(`<div class="chip" onclick="setTodoFunds(5, 5)">¥5/¥5</div>`);
+            chips.push(`<div class="chip" onclick="setTodoFunds(10, 10)">¥10/¥10</div>`);
+        }
         
         container.innerHTML = chips.join('');
     }
@@ -1757,13 +1958,13 @@
         timeBank -= hours;
         saveRecord({
             fund: money,
-            title: '⏳ 时间兑换',
+            title: '时间兑换',
             theme: 'theme-success',
             details: { note: `消耗 ${hours}h, 汇率 ${rate}`, time_bank_change: `-${hours}h` }
-        });
+        }, false);
 
         toggleExchangeCard();
-        alert("💰 兑换成功！");
+        alert("兑换成功！");
     }
 
     function toggleTheme() {
@@ -1803,11 +2004,23 @@
         const dateStr = document.getElementById('dateInput').value;
         document.getElementById('todoDate').value = dateStr;
         const todayStr = getLocalTodayStr();
+        const toggleContainer = document.querySelector('.toggle-container');
         if (dateStr === todayStr) {
             const hasCheckin = historyData.some(r => r.date === dateStr && ['theme-success','theme-fix','theme-repair','theme-prevent','theme-skip'].includes(r.theme));
             if (hasCheckin) {
-                document.getElementById('inputCard').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-sub);">今日已完成打卡 ✨</div>';
+                document.getElementById('inputCard').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-sub);">今日已完成打卡</div>';
+                // 隐藏标题切换按钮，直接显示待办视图
+                if (toggleContainer) toggleContainer.style.display = 'none';
+                toggleHomeView('todo');
+            } else {
+                // 如果没有打卡记录，恢复显示标题
+                if (toggleContainer) toggleContainer.style.display = '';
+                toggleHomeView('checkin');
             }
+        } else {
+            // 非今日日期，恢复显示标题
+            if (toggleContainer) toggleContainer.style.display = '';
+            toggleHomeView('checkin');
         }
         renderTodos();
         renderStrategies();
@@ -1824,7 +2037,7 @@
 
     function applyPrevent() {
         document.getElementById('analysisCard').style.display = 'block';
-        document.getElementById('analysisCard').innerHTML = `<div style="font-weight:700;color:var(--primary);padding:15px;text-align:center;">🛡️ 诊断中...</div>`;
+        document.getElementById('analysisCard').innerHTML = `<div style="font-weight:700;color:var(--primary);padding:15px;text-align:center;">诊断中...</div>`;
         renderForm('prevent');
     }
 
@@ -1947,12 +2160,25 @@
             else { document.getElementById('list-other').insertAdjacentHTML('beforeend', html); document.getElementById('head-other').classList.add('show'); }
         });
 
-        // 3. 渲染 Expired (强制倒序 + 数量限制)
+        // 3. 渲染 Expired (按归档时间排序，倒序)
         if(expiredItems.length > 0) {
             expiredItems.sort((a, b) => {
+                // 按归档时间排序（倒序，最新归档的在前）
+                const archiveTimeA = a.archivedAt || 0;
+                const archiveTimeB = b.archivedAt || 0;
+                
+                // 如果都有归档时间，按归档时间倒序
+                if (archiveTimeA > 0 && archiveTimeB > 0) {
+                    return archiveTimeB - archiveTimeA;
+                }
+                // 如果只有一个有归档时间，有归档时间的排在前面
+                if (archiveTimeA > 0) return -1;
+                if (archiveTimeB > 0) return 1;
+                
+                // 都没有归档时间（自动过期的），按事件时间倒序作为fallback
                 const dtA = a.date + a.time;
                 const dtB = b.date + b.time;
-                return dtB.localeCompare(dtA); // Descending
+                return dtB.localeCompare(dtA);
             });
 
             const limit = expiredFullView ? expiredItems.length : (config.expiredLimit || 5);
@@ -1966,13 +2192,13 @@
             if (!expiredFullView && expiredItems.length > limit) {
                 document.getElementById('list-expired').insertAdjacentHTML('beforeend', 
                     `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleExpiredFullView()">
-                        👇 仅显示最近 ${limit} 条归档，点击展开全部 (${expiredItems.length})
+                        更多
                     </div>`
                 );
             } else if (expiredFullView && expiredItems.length > (config.expiredLimit || 5)) {
                 document.getElementById('list-expired').insertAdjacentHTML('beforeend', 
                     `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleExpiredFullView()">
-                        👆 点击收起长列表
+                        收起
                     </div>`
                 );
             }
@@ -1998,34 +2224,36 @@
         const penalty = t.penalty || 0;
 
         const importance = t.importance || 1;
-        const importanceColors = { 3: 'var(--danger)', 2: 'var(--warning)', 1: 'var(--success)' };
-        const importanceDot = `<span style="width:10px; height:10px; border-radius:50%; background:${importanceColors[importance]}; display:inline-block; margin-right:4px;"></span>`;
+        // 移除重要性圆点，使界面更简洁
+        let importanceDot = '';
 
         const noteContent = t.hideNote ? '******' : t.note;
         const note = t.note ? `<div style="font-size:11px;color:var(--text-sub);margin-top:2px;background:var(--input-bg);padding:4px;border-radius:6px;word-break:break-all;">${noteContent}</div>` : '';
         const safeId = String(t.id);
         const todayStr = getLocalTodayStr();
         const isFuture = t.date > todayStr;
-        const dateBadge = (isFuture || isExpired) ? `<span class="todo-date-badge">📅 ${t.date.slice(5)}</span>` : '';
 
         if (t.status === 'success') {
-            statusIcon = `<span style="color:var(--success)">✔</span>`;
-            actionBtn = `<span style="font-size:12px;color:var(--success);font-weight:bold;">+${reward}</span>`;
+            // 已完成状态：移除状态图标，只显示奖励金额
+            statusIcon = '';
+            actionBtn = `<span style="font-size:11px;color:var(--success);opacity:0.8;">+${reward}</span>`;
         } else if (t.status === 'fail') {
-            statusIcon = `<span style="color:var(--danger)">✕</span>`;
-            actionBtn = `<span style="font-size:12px;color:var(--danger);font-weight:bold;">-${penalty}</span>`;
+            // 已失败状态：移除状态图标，只显示惩罚金额
+            statusIcon = '';
+            actionBtn = `<span style="font-size:11px;color:var(--danger);opacity:0.8;">-${penalty}</span>`;
         } else {
-            statusIcon = `<span style="background:var(--border);width:8px;height:8px;border-radius:50%;display:inline-block;"></span>`;
+            // pending状态
+            statusIcon = '';
             if (isExpired) {
-                statusIcon = `<span style="color:var(--text-sub)">✕</span>`;
-                if(t.status === 'expired_fail') actionBtn = `<span style="font-size:11px;color:var(--danger);">已超时(罚)</span>`;
-                else if(t.status === 'expired_success') actionBtn = `<span style="font-size:11px;color:var(--success);">已达成(奖)</span>`;
-                else actionBtn = `<span style="font-size:11px;color:var(--text-sub);">已过期</span>`;
+                // 已过期状态：移除状态图标
+                if(t.status === 'expired_fail') actionBtn = `<span style="font-size:11px;color:var(--danger);opacity:0.7;">已超时</span>`;
+                else if(t.status === 'expired_success') actionBtn = `<span style="font-size:11px;color:var(--success);opacity:0.7;">已达成</span>`;
+                else actionBtn = `<span style="font-size:11px;color:var(--text-sub);opacity:0.7;">已过期</span>`;
             } else {
                 if (t.type === 'do' || t.type==='other') {
                     actionBtn = `<div id="btn-${safeId}" class="todo-check" onclick="finishTodoWithAnim('${safeId}', 'success')">✔</div>`;
                 } else {
-                    actionBtn = `<button class="btn-mini" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);" onclick="finishTodoWithAnim('${safeId}', 'fail')">破戒</button>`;
+                    actionBtn = `<button class="btn-mini" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);font-size:11px;padding:4px 8px;" onclick="finishTodoWithAnim('${safeId}', 'fail')">破戒</button>`;
                 }
             }
         }
@@ -2036,10 +2264,10 @@
 
         let customActions = '';
         if (!isExpired && (t.status === 'success' || t.status === 'fail')) {
-            customActions += `<div class="btn-action" style="background:var(--input-bg);color:var(--text-sub);font-size:12px;" onclick="archiveTodo('${safeId}')">📥 归档</div>`;
+            customActions += `<div class="btn-action" style="background:var(--input-bg);color:var(--text-sub);font-size:12px;" onclick="archiveTodo('${safeId}')">归档</div>`;
         }
         if (t.note) {
-            customActions += `<div class="btn-action" style="font-size:12px;" onclick="toggleTodoNote('${safeId}')">${t.hideNote ? '👁️' : '🔒'} 备注</div>`;
+            customActions += `<div class="btn-action" style="font-size:12px;" onclick="toggleTodoNote('${safeId}')">备注</div>`;
         }
 
         if(t.status === 'pending' || t.status.startsWith('expired_')) {
@@ -2061,17 +2289,45 @@
             `;
         }
 
+        // 格式化日期显示：今天不显示，最近日期用"昨"、"明"代替
+        let dateBadgeFormatted = '';
+        if (isFuture || isExpired) {
+            const todoDate = new Date(t.date + 'T00:00:00');
+            const today = new Date(todayStr + 'T00:00:00');
+            const diffDays = Math.floor((todoDate - today) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === -1) {
+                dateBadgeFormatted = '<span style="font-size:10px;color:var(--text-sub);opacity:0.7;">昨</span>';
+            } else if (diffDays === 0) {
+                dateBadgeFormatted = '';
+            } else if (diffDays === 1) {
+                dateBadgeFormatted = '<span style="font-size:10px;color:var(--text-sub);opacity:0.7;">明</span>';
+            } else {
+                dateBadgeFormatted = `<span style="font-size:10px;color:var(--text-sub);opacity:0.7;">${t.date.slice(5)}</span>`;
+            }
+        }
+        
+        // 奖励/惩罚信息：都要显示
+        const rewardText = reward > 0 ? `+${reward}` : reward === 0 ? '0' : '';
+        const penaltyText = penalty > 0 ? `-${penalty}` : penalty === 0 ? '0' : '';
+        const fundInfo = `<span style="font-size:10px;color:var(--text-sub);opacity:0.7;">${rewardText}/${penaltyText}</span>`;
+        
         return `
         <div class="${wrapperClass}" id="todo-row-${safeId}">
-            <div style="flex:1; display:flex; align-items:flex-start; gap:8px;">
-                <div style="margin-top:4px;">${statusIcon}</div>
-                <div style="width:100%;">
-                    <div style="font-weight:700; color:var(--text-main);">${importanceDot}${t.title} <span style="font-size:12px;color:var(--text-sub);background:var(--border);padding:2px 4px;border-radius:4px;">${t.time}</span> ${dateBadge}</div>
-                    <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">奖${reward} / 罚${penalty}</div>
+            <div style="flex:1; display:flex; align-items:flex-start; gap:6px; min-width:0;">
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:10px; color:var(--text-sub); opacity:0.7; margin-bottom:3px; display:flex; align-items:center; gap:6px;">
+                        <span>${t.time}</span>
+                        ${dateBadgeFormatted}
+                        ${fundInfo}
+                    </div>
+                    <div style="font-weight:600; color:var(--text-main); font-size:14px; line-height:1.3;">
+                        ${t.title}
+                    </div>
                     ${note}
                 </div>
             </div>
-            <div style="display:flex;align-items:center; gap:4px;">
+            <div style="display:flex;align-items:center; gap:3px; flex-shrink:0;">
                 ${actionBtn} ${menuHtml}
             </div>
         </div>`;
@@ -2174,7 +2430,7 @@
         document.getElementById('todoPenalty').value = t.penalty;
 
         const submitBtn = document.getElementById('todoSubmitBtn');
-        submitBtn.innerHTML = '💾';
+        submitBtn.innerHTML = '保存';
         submitBtn.style.fontSize = '16px';
 
         document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
@@ -2211,6 +2467,7 @@
         const t = todoList.find(x => String(x.id) === String(id));
         if (t) {
             t.archived = true;
+            t.archivedAt = Date.now(); // 记录归档时间戳
             renderTodos();
             triggerAutoSave();
         }
@@ -2253,7 +2510,7 @@
             else { fund = t.reward; theme = 'theme-success'; recordType = 'todo-success'; }
         }
 
-        displayTitle = (t.type==='do'?'🟢':(t.type==='dont'?'🔴':'🔵')) + ' ' + t.title;
+        displayTitle = t.title;
         saveRecord({ fund, title: displayTitle, theme, details:{type:'Todo结算', result, recordType} }, false);
         renderTodos();
         if (typeof renderQuickTasks === 'function') renderQuickTasks(); // 更新计时页面的快选胶囊
@@ -2268,11 +2525,11 @@
             if (t.date === todayStr && t.status === 'pending' && currentHm > t.time) {
                 if (t.type === 'dont') {
                     t.status = 'expired_success';
-                    saveRecord({ fund: t.reward, title: '🔴 ' + t.title, theme: 'theme-success', details: { note: '坚持达成', recordType: 'todo-success' } }, false);
+                    saveRecord({ fund: t.reward, title: t.title, theme: 'theme-success', details: { note: '坚持达成', recordType: 'todo-success' } }, false);
                     changed = true;
                 } else {
                     t.status = 'expired_fail';
-                    saveRecord({ fund: -t.penalty, title: (t.type==='do'?'🟢':'🔵') + ' ' + t.title, theme: 'theme-pay', details: { note: '超时未完成', recordType: 'todo-fail' } }, false);
+                    saveRecord({ fund: -t.penalty, title: t.title, theme: 'theme-pay', details: { note: '超时未完成', recordType: 'todo-fail' } }, false);
                     changed = true;
                 }
             }
@@ -2310,7 +2567,7 @@
             <div class="list-item">
                 <div style="flex:1">
                     <div style="font-weight:bold;color:var(--text-main);">${nameDisplay}</div>
-                    <div style="font-size:12px;color:var(--warning);">💰 ${item.cost} ${item.hidden ? '(私密)' : ''}</div>
+                    <div style="font-size:12px;color:var(--warning);">${item.cost} ${item.hidden ? '(私密)' : ''}</div>
                 </div>
                 <div style="display:flex;gap:4px; align-items:center;">
                     <button class="btn-mini" ${btnState}>兑换</button>
@@ -2344,7 +2601,7 @@
         else { document.getElementById('wishHiddenLabel').classList.remove('checked'); }
 
         editingWishIndex = index;
-        document.getElementById('btnShopAdd').innerText = "💾 保存商品";
+        document.getElementById('btnShopAdd').innerText = "保存";
         document.getElementById('btnShopCancel').style.display = "inline-block";
         document.querySelector('#page-shop .card').scrollIntoView({behavior:'smooth'});
     }
@@ -2356,7 +2613,7 @@
         document.getElementById('wishHiddenLabel').classList.remove('checked');
 
         editingWishIndex = -1;
-        document.getElementById('btnShopAdd').innerText = "➕ 上架新愿望";
+        document.getElementById('btnShopAdd').innerText = "上架";
         document.getElementById('btnShopCancel').style.display = "none";
     }
 
@@ -2389,7 +2646,7 @@
         const item = wishList[idx];
         if(globalWallet < item.cost) return alert(`❌ 余额不足！还差 ${item.cost - globalWallet} 元`);
         if(!confirm(`确认消耗 ${item.cost} 元兑换【${item.name}】?`)) return;
-        saveRecord({fund: -item.cost, title:'🎁 商店兑换', theme:'theme-shop', details:{item: item.name}});
+        saveRecord({fund: -item.cost, title:'商店兑换', theme:'theme-shop', details:{item: item.name}}, false);
     }
 
     function handlePaymentWithCompress(input) {
@@ -2406,7 +2663,7 @@
                 canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                 const payAmount = globalDebt;
-                saveRecord({ fund: -payAmount, title: '💸 支付清零', theme: 'theme-pay', details: { image: dataUrl, note: '上传凭证清零' } });
+                saveRecord({ fund: -payAmount, title: '支付清零', theme: 'theme-pay', details: { image: dataUrl, note: '上传凭证清零' } }, false);
                 alert("✅ 支付凭证已上传，债务已清零！");
                 
                 // 清理内存
@@ -2446,20 +2703,20 @@
                 if(i.details && i.details.image) {
                     imgHtml = `<img src="${i.details.image}" class="record-img" onclick="const w=window.open('about:blank');w.document.write('<img src=${i.details.image} style=width:100%>')">`;
                 }
-                return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `📝改:${v}`; if(k==='penalty_rule') return `⚖️${v}`; if(k==='image') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
+                return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
             }).join('');
 
             // 如果有更多，显示一个提示
             if (!historyFullView && historyData.length > limit) {
                 list.insertAdjacentHTML('beforeend', 
                     `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleHistoryFullView()">
-                        👇 仅显示最近 ${limit} 条记录，点击展开全部 (${historyData.length})
+                        更多
                     </div>`
                 );
             } else if (historyFullView && historyData.length > (config.historyLimit || 5)) {
                 list.insertAdjacentHTML('beforeend', 
                     `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleHistoryFullView()">
-                        👆 点击收起长列表
+                        收起
                     </div>`
                 );
             }
@@ -2472,7 +2729,7 @@
             if (fixPlan && pendingHiddenId !== lastRecord.id.toString()) {
                 pendingCard.style.display = 'block';
                 pendingCard.dataset.id = lastRecord.id;
-                document.getElementById('pendingText').innerHTML = `📅 ${lastRecord.date}: ${fixPlan}`;
+                document.getElementById('pendingText').innerHTML = `${lastRecord.date}: ${fixPlan}`;
             } else { pendingCard.style.display = 'none'; }
         } else { pendingCard.style.display = 'none'; }
 
@@ -2550,11 +2807,12 @@
 
     function autoCalculate() {
         tempTimeDiff = 0; useTimeBank = false;
-        const studyVal = parseFloat(document.getElementById('studyInput').value);
+        const studyInput = document.getElementById('studyInput');
+        const studyVal = studyInput.value === '' ? null : parseFloat(studyInput.value);
         const sleepVal = document.getElementById('sleepInput').value;
         const wakeVal = document.getElementById('wakeInput').value;
 
-        if (!studyVal || studyVal < 0 || !sleepVal || !wakeVal) { 
+        if (studyVal === null || studyVal === undefined || isNaN(studyVal) || studyVal < 0 || !sleepVal || !wakeVal) { 
             const card = document.getElementById('analysisCard');
             card.style.display = 'block';
             card.style.textAlign = 'center';
@@ -2572,7 +2830,7 @@
 
         if (diff < 0) {
             if (timeBank >= Math.abs(diff)) {
-                if(confirm(`⚠️ 专注时长不足 ${Math.abs(diff)}h。\n⏳ 余额: ${timeBank.toFixed(1)}h。\n\n是否消耗存款抵消惩罚？`)) {
+                if(confirm(`专注时长不足 ${Math.abs(diff)}h。\n余额: ${timeBank.toFixed(1)}h。\n\n是否消耗存款抵消惩罚？`)) {
                     useTimeBank = true;
                 } else {
                     types.push('study');
@@ -2598,7 +2856,7 @@
 
         failedTypes = types;
         document.getElementById('analysisCard').style.display = 'block';
-        document.getElementById('analysisCard').innerHTML = `<div style="font-weight:700;color:var(--primary);padding:15px;text-align:center;">📊 诊断完成，请在下方确认结果...</div>`;
+        document.getElementById('analysisCard').innerHTML = `<div style="font-weight:700;color:var(--primary);padding:15px;text-align:center;">诊断完成，请在下方确认结果...</div>`;
         renderForm(penalty > 0 ? (faults.length >= 2 ? 'repair' : 'fix') : 'success', null, useTimeBank);
     }
 
@@ -2612,30 +2870,30 @@
         if (type === 'skip') {
             title = '🛌 申请休息'; theme = 'theme-skip'; defaultFund = 0; 
             inputs = [{l:'申请原因', id:'s_reason', p:'必填'}]; 
-            extraHTML = `<div style="font-size:12px;color:var(--text-sub);background:var(--input-bg);padding:10px;border-radius:10px;margin-bottom:12px;">ℹ️ 本月已休息 ${extraInfo} 次</div>`;
+            extraHTML = `<div style="font-size:12px;color:var(--text-sub);background:var(--input-bg);padding:10px;border-radius:10px;margin-bottom:12px;">本月已休息 ${extraInfo} 次</div>`;
         } else if (type === 'prevent') {
-            title = '🛡️ 主动干预'; theme = 'theme-prevent';
+            title = '主动干预'; theme = 'theme-prevent';
             const cost = config.preventCost || 10;
             defaultFund = -cost;
             inputs = [{l:'干预说明', id:'p_fix', p:'说明接下来的行动计划'}];
-            extraHTML = `<div style="font-size:12px;color:var(--info);background:var(--input-bg);padding:10px;border-radius:10px;margin-bottom:12px;">🛡️ 风险对冲金: ${cost} 元</div>`;
+            extraHTML = `<div style="font-size:12px;color:var(--info);background:var(--input-bg);padding:10px;border-radius:10px;margin-bottom:12px;">风险对冲金: ${cost} 元</div>`;
         } else if (type === 'repair') {
-            title = '⚠️ 深度修复'; theme = 'theme-repair'; 
+            title = '深度修复'; theme = 'theme-repair'; 
             inputs = [{l:'失控复盘', id:'r_reason', p:'分析原因'}, {l:'补救措施', id:'r_fix', p:'明日展示'}];
         } else if (type === 'fix') {
-            title = '🟡 一级修正'; theme = 'theme-fix'; 
+            title = '一级修正'; theme = 'theme-fix'; 
             inputs = [{l:'偏差原因', id:'f_reason', p:'简单描述'}, {l:'补偿计划', id:'f_plan', p:'明日展示'}];
         } else {
             title = '🎉 完美达标'; theme = 'theme-success'; 
             inputs = [{l:'今日成就', id:'s_note', p:'记下一件开心的事'}];
         }
 
-        let moneyTip = defaultFund >= 0 ? `💰 奖励: +${defaultFund}` : `💸 扣罚: ${defaultFund}`; 
+        let moneyTip = defaultFund >= 0 ? `奖励: +${defaultFund}` : `扣罚: ${defaultFund}`; 
         if (defaultFund === 0) moneyTip = "无资金变动";
 
         let timeTip = '';
         if (isUsingBank) {
-            timeTip = `<div style="font-size:12px;color:var(--time);background:var(--time-bg);padding:10px;border-radius:10px;margin-bottom:10px;">⏳ 银行支出: -${Math.abs(tempTimeDiff).toFixed(1)}h</div>`;
+            timeTip = `<div style="font-size:12px;color:var(--time);background:var(--time-bg);padding:10px;border-radius:10px;margin-bottom:10px;">银行支出: -${Math.abs(tempTimeDiff).toFixed(1)}h</div>`;
         }
 
         extraHTML += timeTip + `
@@ -2660,7 +2918,7 @@
                 </div>
                 ${inputs.map(i => `<div class="input-group"><label class="input-label">${i.l}</label><textarea id="${i.id}" placeholder="${i.p||''}" rows="2"></textarea></div>`).join('')}
                 <div id="strategyArea" class="chips-container" style="margin-bottom:15px;"></div>
-                <button class="btn-calc" onclick="submitForm('${theme}', '${title}')" style="margin-top:10px;">💾 确认提交并保存</button>
+                <button class="btn-calc" onclick="submitForm('${theme}', '${title}')" style="margin-top:10px;">✓ 确认提交</button>
                 <button class="btn-calc btn-secondary" onclick="cancelForm()" style="margin-top:8px;">✕ 取消</button>
             </div>`;
         con.innerHTML = html;
@@ -2710,7 +2968,28 @@
         if (calcReason && fund < 0 && theme !== 'theme-prevent') details['penalty_rule'] = calcReason;
         if (fund !== defaultFund) details['manual_edit_reason'] = fundReason;
 
-        saveRecord({ fund, title, theme, details });
+        // 保存记录，不重新加载页面
+        saveRecord({ fund, title, theme, details }, false);
+        
+        // 关闭表单容器
+        cancelForm();
+        
+        // 检查是否需要更新打卡界面状态
+        const dateStr = document.getElementById('dateInput').value;
+        const todayStr = getLocalTodayStr();
+        if (dateStr === todayStr) {
+            const hasCheckin = historyData.some(r => r.date === dateStr && ['theme-success','theme-fix','theme-repair','theme-prevent','theme-skip'].includes(r.theme));
+            if (hasCheckin) {
+                document.getElementById('inputCard').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-sub);">今日已完成打卡</div>';
+                // 隐藏标题切换按钮，直接显示待办视图
+                const toggleContainer = document.querySelector('.toggle-container');
+                if (toggleContainer) toggleContainer.style.display = 'none';
+                toggleHomeView('todo');
+            }
+        }
+        
+        // 更新UI显示
+        updateUI();
     }
 
     function quickSelectTask(name) {
@@ -2791,12 +3070,12 @@
     
     // 计时器运行时添加计划任务（使用简单对话框）
     function addPlannedTaskWhileRunning() {
-        const taskName = prompt("📝 请输入新计划的任务名称：");
+        const taskName = prompt("请输入新计划的任务名称：");
         if (!taskName || !taskName.trim()) return;
         
-        const plannedTime = prompt("⏰ 计划开始时间（格式 HH:MM，可留空）：", "");
-        const plannedEndTime = prompt("⏰ 计划结束时间（格式 HH:MM，可留空）：", "");
-        const note = prompt("📋 备注（可留空）：", "") || '';
+        const plannedTime = prompt("计划开始时间（格式 HH:MM，可留空）：", "");
+        const plannedEndTime = prompt("计划结束时间（格式 HH:MM，可留空）：", "");
+        const note = prompt("备注（可留空）：", "") || '';
         
         // 验证时间格式（如果填写了）
         if (plannedTime && plannedTime.trim() && !/^\d{1,2}:\d{2}$/.test(plannedTime.trim())) {
@@ -2865,7 +3144,7 @@
                     <div style="font-weight:bold; color:var(--text-main);">${p.name} 
                         ${p.plannedTime || p.plannedEndTime ? `
                         <span style="font-size:11px; color:var(--info); background:var(--border); padding:2px 6px; border-radius:4px; margin-left:4px;">
-                            🕒 ${p.plannedTime || '--:--'}${p.plannedEndTime ? ' - ' + p.plannedEndTime : ''}
+                            ${p.plannedTime || '--:--'}${p.plannedEndTime ? ' - ' + p.plannedEndTime : ''}
                         </span>` : ''}
                     </div>
                     ${p.note ? '<div style="font-size:11px; color:var(--text-sub); margin-top:4px;">' + p.note + '</div>' : ''}
@@ -2879,10 +3158,10 @@
                             <div class="btn-mini" style="background:var(--time); color:#fff; width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="completePlannedTask(${p.id})">✅ 完成任务</div>
                             <div class="btn-mini" style="background:var(--warning); color:#fff; width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="abandonPlannedTask(${p.id})">🚫 放弃任务</div>
                             <div class="btn-mini" style="background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="togglePinTask(${p.id})">
-                                ${pinnedTaskId == p.id ? '📍 取消置顶' : '📌 设为置顶'}
+                                ${pinnedTaskId == p.id ? '取消置顶' : '设为置顶'}
                             </div>
-                            <div class="btn-mini" style="background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="editPlannedTask(${p.id})">✏️ 编辑任务</div>
-                            <div class="btn-mini" style="background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger); width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="deletePlannedTask(${p.id})">✕ 删除计划</div>
+                            <div class="btn-mini" style="background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="editPlannedTask(${p.id})">✏️ 编辑</div>
+                            <div class="btn-mini" style="background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger); width:100%; text-align:left; display:flex; align-items:center; gap:8px;" onclick="deletePlannedTask(${p.id})">🗑️ 删除计划</div>
                         </div>
                     </div>
                 </div>
@@ -2966,15 +3245,15 @@
                 <div class="review-history-item">
                     <div class="review-history-date">${date}</div>
                     ${r.great ? `
-                        <div class="review-history-label">🌟 真棒:</div>
+                        <div class="review-history-label">真棒:</div>
                         <div class="review-history-content">${r.great}</div>
                     ` : ''}
                     ${r.improve ? `
-                        <div class="review-history-label">🚀 加油:</div>
+                        <div class="review-history-label">加油:</div>
                         <div class="review-history-content">${r.improve}</div>
                     ` : ''}
                     <div style="text-align:right; margin-top:8px;">
-                        <button class="btn-mini" style="background:var(--border); color:var(--text-main); font-size:10px;" onclick="editHistoricalReview('${date}')">✏️ 调出并编辑</button>
+                        <button class="btn-mini" style="background:var(--border); color:var(--text-main); font-size:10px;" onclick="editHistoricalReview('${date}')">✏️ 编辑</button>
                     </div>
                 </div>
             `;
@@ -3067,10 +3346,23 @@
         return plannedTasks.find(p => p.plannedTime && p.plannedTime >= nowHm) || null;
     }
 
+    // 计算今天已学习时间（只统计任务名包含"学习"的计时）
+    function getTodayStudyTime() {
+        const todayStr = getLocalTodayStr();
+        const studyRecords = timerRecords.filter(r => 
+            r.date === todayStr && 
+            r.name && 
+            (r.name.includes('学习') || r.name.includes('study') || r.name.toLowerCase().includes('study'))
+        );
+        const totalHours = studyRecords.reduce((sum, r) => sum + parseFloat(r.duration || 0), 0);
+        return totalHours;
+    }
+
     function updateStickyNotif() {
         const bar = document.getElementById('stickyNotifBar');
         const notifTimer = document.getElementById('notifTimer');
         const notifPinned = document.getElementById('notifPinned');
+        const notifQuickStudy = document.getElementById('notifQuickStudy');
         
         let hasContent = false;
 
@@ -3078,9 +3370,30 @@
         if (timerRunning) {
             notifTimer.style.display = 'flex';
             document.getElementById('notifTimerName').innerText = document.getElementById('timerTaskName').value || '任务';
+            // 更新暂停按钮文字
+            const pauseBtn = document.getElementById('notifTimerPauseBtn');
+            if (pauseBtn) {
+                pauseBtn.innerText = timerPaused ? '▶️' : '⏸️';
+            }
             hasContent = true;
+            // 计时运行时隐藏学习快速按钮
+            if (notifQuickStudy) notifQuickStudy.style.display = 'none';
         } else {
             notifTimer.style.display = 'none';
+            // 计时未运行时，根据配置显示学习快速按钮
+            const interfaceConfig = config.interface || { showQuickStudy: true };
+            if (notifQuickStudy && interfaceConfig.showQuickStudy !== false) {
+                notifQuickStudy.style.display = 'flex';
+                // 更新今天已学习时间
+                const studyTime = getTodayStudyTime();
+                const studyTimeEl = document.getElementById('notifStudyTime');
+                if (studyTimeEl) {
+                    studyTimeEl.innerText = studyTime.toFixed(1) + 'h';
+                }
+                hasContent = true;
+            } else if (notifQuickStudy) {
+                notifQuickStudy.style.display = 'none';
+            }
         }
 
         // 2. 更新置顶通知 (优先手动置顶，其次自动显示下一个最近任务)
@@ -3102,7 +3415,7 @@
 
         if (displayTask) {
             notifPinned.style.display = 'flex';
-            const prefix = isAutoPinned ? '🕒 下一计划: ' : '📌 置顶计划: ';
+            const prefix = isAutoPinned ? '下一计划: ' : '置顶计划: ';
             document.getElementById('notifPinnedName').innerText = displayTask.name;
             document.getElementById('notifPinnedTime').innerText = displayTask.plannedTime ? `${prefix}${displayTask.plannedTime}` : prefix;
             hasContent = true;
@@ -3111,6 +3424,32 @@
         }
 
         bar.style.display = hasContent ? 'flex' : 'none';
+    }
+
+    // 快速启动"学习"计时
+    function quickStartStudy() {
+        if (timerRunning) {
+            showModal({
+                title: '⚠️ 提示',
+                message: '已有计时在进行中，请先结束当前计时',
+                buttons: [{ text: '确定', primary: true, callback: () => {} }]
+            });
+            return;
+        }
+        
+        // 切换到计时页面
+        switchPage('timer');
+        
+        // 设置任务名称为"学习"
+        const timerTaskName = document.getElementById('timerTaskName');
+        if (timerTaskName) {
+            timerTaskName.value = '学习';
+        }
+        
+        // 直接开始计时
+        setTimeout(() => {
+            startTimer();
+        }, 100);
     }
 
     function startFromPlan(id) {
@@ -3173,7 +3512,7 @@
                         }},
                         { text: '添加奖励', primary: true, callback: () => {
                             showModal({
-                                title: '💰 添加奖励金',
+                                title: '添加奖励金',
                                 message: `任务：${p.name}\n用时：${hours.toFixed(2)} 小时`,
                                 inputs: [
                                     { id: 'planRewardAmount', label: '金额（元）', type: 'number', placeholder: '输入金额', value: '' },
@@ -3190,7 +3529,7 @@
                                             const fundRecord = {
                                                 id: Date.now() + 1,
                                                 date: getLocalTodayStr(),
-                                                title: `💰 完成计划：${p.name}`,
+                                                title: `完成计划：${p.name}`,
                                                 fund: amount,
                                                 theme: 'theme-success',
                                                 details: {
@@ -3248,7 +3587,7 @@
                 }},
                 { text: '添加罚金并删除', primary: true, callback: () => {
                     showModal({
-                        title: '💸 添加罚金',
+                        title: '添加罚金',
                         message: `放弃任务：${task.name}`,
                         inputs: [
                             { id: 'penaltyAmount', label: '罚金金额（元）', type: 'number', placeholder: '输入金额', value: '' },
@@ -3262,7 +3601,7 @@
                                     const fundRecord = {
                                         id: Date.now(),
                                         date: getLocalTodayStr(),
-                                        title: `💸 放弃计划：${task.name}`,
+                                        title: `放弃计划：${task.name}`,
                                         fund: -penalty,
                                         theme: 'theme-repair',
                                         details: {
@@ -3338,7 +3677,11 @@
 
     function toggleTimerPause() {
         timerPaused = !timerPaused;
-        document.getElementById('btnTimerPause').innerText = timerPaused ? '▶️ 继续' : '⏸️ 暂停';
+        const btnTimerPause = document.getElementById('btnTimerPause');
+        if (btnTimerPause) btnTimerPause.innerText = timerPaused ? '▶️ 继续' : '⏸️ 暂停';
+        // 更新通知栏的暂停按钮
+        const notifPauseBtn = document.getElementById('notifTimerPauseBtn');
+        if (notifPauseBtn) notifPauseBtn.innerText = timerPaused ? '▶️' : '⏸️';
         saveTimerState(); // 保存暂停状态
         triggerAutoSave(); // 同步到云端
     }
@@ -3348,9 +3691,8 @@
         const m = Math.floor((timerSeconds % 3600) / 60).toString().padStart(2, '0');
         const s = (timerSeconds % 60).toString().padStart(2, '0');
         const clockStr = `${h}:${m}:${s}`;
-        document.getElementById('timerClock').innerText = clockStr;
         
-        // 同步更新置顶通知栏的时钟
+        // 更新置顶通知栏的时钟
         const notifClock = document.getElementById('notifTimerClock');
         if (notifClock) notifClock.innerText = clockStr;
     }
@@ -3360,7 +3702,7 @@
         const taskName = document.getElementById('timerTaskName').value;
         
         showModal({
-            title: '⏹️ 结束计时',
+            title: '结束计时',
             message: `确认结束本次计时并保存？\n\n任务：${taskName}\n用时：${hours.toFixed(2)} 小时`,
             buttons: [
                 { text: '取消', primary: false, callback: () => {} },
@@ -3397,6 +3739,9 @@
         timerRecords.unshift(record);
         localStorage.setItem('habit_timer_records_v1', JSON.stringify(timerRecords));
         
+        // 更新学习时间显示
+        updateStickyNotif();
+        
         // 检查是否有关联的待办事项
         if (todoId) {
             const id = String(todoId);
@@ -3424,7 +3769,7 @@
     
     function askForFunds(taskName, hours) {
         showModal({
-            title: '💰 添加奖励/惩罚',
+            title: '添加奖励/惩罚',
             message: `计时任务「${taskName}」已完成\n用时：${hours.toFixed(2)} 小时\n\n是否添加愿望金或罚金？`,
             buttons: [
                 { text: '不添加', primary: false, callback: () => { completeTimerStop(); } },
@@ -3436,7 +3781,7 @@
     
     function showFundInput(taskName, hours, isReward) {
         showModal({
-            title: isReward ? '💵 添加愿望金' : '💸 添加罚金',
+            title: isReward ? '添加愿望金' : '添加罚金',
             message: `任务：${taskName}\n用时：${hours.toFixed(2)} 小时`,
             inputs: [
                 { id: 'fundAmount', label: '金额（元）', type: 'number', placeholder: '输入金额', value: '' },
@@ -3454,7 +3799,7 @@
                     const fundRecord = {
                         id: Date.now() + 1,
                         date: getLocalTodayStr(),
-                        title: isReward ? `💰 计时奖励：${taskName}` : `💸 计时惩罚：${taskName}`,
+                        title: isReward ? `计时奖励：${taskName}` : `计时惩罚：${taskName}`,
                         fund: isReward ? amount : -amount,
                         theme: isReward ? 'theme-success' : 'theme-repair',
                         details: {
@@ -3530,7 +3875,7 @@
             <div class="list-item">
                 <div style="flex:1">
                     <div style="font-weight:bold; color:var(--text-main);">${r.name}</div>
-                    <div style="font-size:12px; color:var(--primary);">⏱️ ${r.duration}h | ${r.date} ${startTime} - ${r.time}</div>
+                    <div style="font-size:12px; color:var(--primary);">${r.duration}h | ${r.date} ${startTime} - ${r.time}</div>
                     ${r.note ? '<div style="font-size:11px; color:var(--text-sub); margin-top:4px; background:var(--input-bg); padding:4px; border-radius:4px;">' + r.note + '</div>' : ''}
                 </div>
                 <div style="display:flex; gap:8px;">
@@ -3544,13 +3889,13 @@
         if (!timerFullView && timerRecords.length > limit) {
             list.insertAdjacentHTML('beforeend', 
                 `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleTimerFullView()">
-                    👇 仅显示最近 ${limit} 条记录，点击展开全部 (${timerRecords.length})
+                    更多
                 </div>`
             );
         } else if (timerFullView && timerRecords.length > (config.timerLimit || 5)) {
             list.insertAdjacentHTML('beforeend', 
                 `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleTimerFullView()">
-                    👆 点击收起长列表
+                    收起
                 </div>`
             );
         }
@@ -3850,7 +4195,7 @@
         
         const chips = config.todoTimeChips || [];
         if (chips.length === 0) {
-            list.innerHTML = '<div style="font-size:12px; color:var(--text-sub); padding:8px;">使用默认快选（1h后、2h后、3h后、今晚23:30）</div>';
+            list.innerHTML = '';
             return;
         }
         
@@ -3865,43 +4210,97 @@
         if (!config.todoTimeChips) config.todoTimeChips = [];
         
         if (type === 'offset') {
-            const label = prompt('📝 请输入标签名称（如"1小时后"）：');
-            if (!label || !label.trim()) return;
-            
-            const hoursStr = prompt('⏰ 请输入小时偏移量（如"1"表示1小时后）：');
-            const hours = parseFloat(hoursStr);
-            if (isNaN(hours) || hours <= 0) {
-                showModal({
-                    title: '⚠️ 提示',
-                    message: '小时偏移量无效',
-                    buttons: [{ text: '确定', primary: true, callback: () => {} }]
-                });
-                return;
-            }
-            
-            config.todoTimeChips.push({ type: 'offset', label: label.trim(), hours: hours });
+            showModal({
+                title: '添加偏移时间',
+                message: '设置相对于当前时间的偏移快选',
+                inputs: [
+                    { id: 'chipLabel', label: '标签名称', placeholder: '例如：1小时后', type: 'text' },
+                    { id: 'chipHours', label: '小时偏移量', placeholder: '例如：1', type: 'number', value: '1' }
+                ],
+                buttons: [
+                    { text: '取消', primary: false, callback: () => {} },
+                    { 
+                        text: '确定', 
+                        primary: true, 
+                        callback: (values) => {
+                            const label = values.chipLabel ? values.chipLabel.trim() : '';
+                            const hoursStr = values.chipHours ? values.chipHours.trim() : '';
+                            
+                            if (!label) {
+                                showModal({
+                                    title: '提示',
+                                    message: '请填写标签名称',
+                                    buttons: [{ text: '确定', primary: true, callback: () => {} }]
+                                });
+                                return;
+                            }
+                            
+                            const hours = parseFloat(hoursStr);
+                            if (isNaN(hours) || hours <= 0) {
+                                showModal({
+                                    title: '提示',
+                                    message: '小时偏移量无效，请输入大于0的数字',
+                                    buttons: [{ text: '确定', primary: true, callback: () => {} }]
+                                });
+                                return;
+                            }
+                            
+                            config.todoTimeChips.push({ type: 'offset', label: label, hours: hours });
+                            localStorage.setItem('habit_config_v7', JSON.stringify(config));
+                            renderTodoTimeChipSettings();
+                            renderTodoTimeChips();
+                            renderTimerTimeChips();
+                            triggerAutoSave();
+                        }
+                    }
+                ]
+            });
         } else if (type === 'fixed') {
-            const label = prompt('📝 请输入标签名称（如"今晚23:59"）：');
-            if (!label || !label.trim()) return;
-            
-            const time = prompt('🕐 请输入固定时间（格式 HH:MM）：', '23:59');
-            if (!time || !time.trim() || !/^\d{1,2}:\d{2}$/.test(time.trim())) {
-                showModal({
-                    title: '⚠️ 提示',
-                    message: '时间格式不正确，应为 HH:MM',
-                    buttons: [{ text: '确定', primary: true, callback: () => {} }]
-                });
-                return;
-            }
-            
-            config.todoTimeChips.push({ type: 'fixed', label: label.trim(), time: time.trim() });
+            showModal({
+                title: '添加固定时间',
+                message: '设置固定时间的快选',
+                inputs: [
+                    { id: 'chipLabel', label: '标签名称', placeholder: '例如：今晚23:59', type: 'text' },
+                    { id: 'chipTime', label: '固定时间', placeholder: 'HH:MM，例如：23:59', type: 'text', value: '23:59' }
+                ],
+                buttons: [
+                    { text: '取消', primary: false, callback: () => {} },
+                    { 
+                        text: '确定', 
+                        primary: true, 
+                        callback: (values) => {
+                            const label = values.chipLabel ? values.chipLabel.trim() : '';
+                            const time = values.chipTime ? values.chipTime.trim() : '';
+                            
+                            if (!label) {
+                                showModal({
+                                    title: '提示',
+                                    message: '请填写标签名称',
+                                    buttons: [{ text: '确定', primary: true, callback: () => {} }]
+                                });
+                                return;
+                            }
+                            
+                            if (!time || !/^\d{1,2}:\d{2}$/.test(time)) {
+                                showModal({
+                                    title: '提示',
+                                    message: '时间格式不正确，应为 HH:MM（如 23:59）',
+                                    buttons: [{ text: '确定', primary: true, callback: () => {} }]
+                                });
+                                return;
+                            }
+                            
+                            config.todoTimeChips.push({ type: 'fixed', label: label, time: time });
+                            localStorage.setItem('habit_config_v7', JSON.stringify(config));
+                            renderTodoTimeChipSettings();
+                            renderTodoTimeChips();
+                            renderTimerTimeChips();
+                            triggerAutoSave();
+                        }
+                    }
+                ]
+            });
         }
-        
-        localStorage.setItem('habit_config_v7', JSON.stringify(config));
-        renderTodoTimeChipSettings();
-        renderTodoTimeChips(); // 同步更新待办页面
-        renderTimerTimeChips(); // 同步更新计时页面
-        triggerAutoSave();
     }
     
     // 删除待办时间快选
@@ -3944,10 +4343,15 @@
         } else if (id === 'showShop') {
             const label = document.getElementById('label-showShop');
             if (label) label.classList.toggle('checked', isChecked);
+        } else if (id === 'showQuickStudy') {
+            const label = document.getElementById('label-showQuickStudy');
+            if (label) label.classList.toggle('checked', isChecked);
         }
         
         // 保存设置
         saveInterfaceSettings();
+        // 更新通知栏显示
+        updateStickyNotif();
     }
     
     function saveInterfaceSettings() {
@@ -3957,10 +4361,12 @@
         
         if (!showTimer || !showStats || !showShop) return;
         
+        const showQuickStudy = document.getElementById('showQuickStudy');
         config.interface = {
             showTimer: showTimer.checked,
             showStats: showStats.checked,
-            showShop: showShop.checked
+            showShop: showShop.checked,
+            showQuickStudy: showQuickStudy ? showQuickStudy.checked : true
         };
         
         localStorage.setItem('habit_config_v7', JSON.stringify(config));
@@ -3970,16 +4376,18 @@
     
     // 应用界面显示设置
     function applyInterfaceSettings() {
-        const interfaceConfig = config.interface || { showTimer: true, showStats: true, showShop: true };
+        const interfaceConfig = config.interface || { showTimer: true, showStats: true, showShop: true, showQuickStudy: true };
         
         // 设置复选框状态和样式
         const showTimerCheckbox = document.getElementById('showTimer');
         const showStatsCheckbox = document.getElementById('showStats');
         const showShopCheckbox = document.getElementById('showShop');
+        const showQuickStudyCheckbox = document.getElementById('showQuickStudy');
         
         const labelTimer = document.getElementById('label-showTimer');
         const labelStats = document.getElementById('label-showStats');
         const labelShop = document.getElementById('label-showShop');
+        const labelQuickStudy = document.getElementById('label-showQuickStudy');
         
         if (showTimerCheckbox) {
             showTimerCheckbox.checked = interfaceConfig.showTimer !== false;
@@ -3997,6 +4405,12 @@
             showShopCheckbox.checked = interfaceConfig.showShop !== false;
             if (labelShop) {
                 labelShop.classList.toggle('checked', interfaceConfig.showShop !== false);
+            }
+        }
+        if (showQuickStudyCheckbox) {
+            showQuickStudyCheckbox.checked = interfaceConfig.showQuickStudy !== false;
+            if (labelQuickStudy) {
+                labelQuickStudy.classList.toggle('checked', interfaceConfig.showQuickStudy !== false);
             }
         }
         
@@ -4343,6 +4757,26 @@
                     if(!isAuto) alert("✅ 同步完成：本地数据已是最新");
                 }
             } else {
+                // Push 操作：先检查是否有更新，避免覆盖其他设备的更改
+                const localTs = parseInt(localStorage.getItem('habit_last_save') || '0');
+                const cloudTs = cloudData ? (cloudData.timestamp || 0) : 0;
+                
+                // 如果云端数据更新，先合并再推送
+                if (cloudData && cloudTs > localTs) {
+                    console.log('⚠️ 检测到云端有更新，先合并数据再推送');
+                    // 合并数据：保留本地和云端的新增/修改
+                    mergeData(cloudData, {
+                        data: historyData || [],
+                        todos: todoList || [],
+                        wishes: wishList || [],
+                        strategies: userStrategies || {},
+                        timerRecords: timerRecords || [],
+                        plannedTasks: plannedTasks || [],
+                        dailyReviews: dailyReviews || {},
+                        taskUsageCount: taskUsageCount || {}
+                    });
+                }
+                
                 // 获取当前计时器状态
                 const timerStateStr = localStorage.getItem('habit_timer_state_v1');
                 const timerState = timerStateStr ? JSON.parse(timerStateStr) : null;
@@ -4373,10 +4807,63 @@
                 };
                 if (sha) body.sha = sha;
 
-                await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, { method:'PUT', headers, body: JSON.stringify(body) });
+                try {
+                    const putRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, { method:'PUT', headers, body: JSON.stringify(body) });
+                    
+                    // 处理409冲突（文件已被其他设备修改）
+                    if (putRes.status === 409) {
+                        console.log('⚠️ 检测到冲突，重新拉取并合并后重试');
+                        // 重新获取最新数据
+                        const retryGetRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, { headers });
+                        if (retryGetRes.ok) {
+                            const retryData = await retryGetRes.json();
+                            const retryCloudData = JSON.parse(decodeURIComponent(escape(atob((retryData.content || '').replace(/\n/g,"")))));
+                            const retrySha = retryData.sha;
+                            
+                            // 合并数据
+                            mergeData(retryCloudData, {
+                                data: historyData || [],
+                                todos: todoList || [],
+                                wishes: wishList || [],
+                                strategies: userStrategies || {},
+                                timerRecords: timerRecords || [],
+                                plannedTasks: plannedTasks || [],
+                                dailyReviews: dailyReviews || {},
+                                taskUsageCount: taskUsageCount || {}
+                            });
+                            
+                            // 使用合并后的数据重新推送
+                            content.data = stripImagesFromHistory(historyData);
+                            content.todos = todoList;
+                            content.wishes = wishList;
+                            content.strategies = userStrategies;
+                            content.timerRecords = timerRecords;
+                            content.plannedTasks = plannedTasks;
+                            content.dailyReviews = dailyReviews;
+                            content.taskUsageCount = taskUsageCount;
+                            content.timestamp = Date.now();
+                            
+                            body.content = btoa(unescape(encodeURIComponent(JSON.stringify(content))));
+                            body.sha = retrySha;
+                            
+                            await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, { method:'PUT', headers, body: JSON.stringify(body) });
+                        }
+                    } else if (!putRes.ok) {
+                        throw new Error(`Push failed with status ${putRes.status}`);
+                    }
+                } catch (fetchError) {
+                    if (fetchError.message && fetchError.message.includes('409')) {
+                        // 如果还是409，说明在重试期间又有更新，提示用户手动同步
+                        setSyncBadgeStatus('status-error', '冲突');
+                        if(!isAuto) alert("⚠️ 同步冲突：其他设备正在同步，请稍后重试");
+                        return;
+                    }
+                    throw fetchError;
+                }
 
                 setSyncBadgeStatus('status-idle', '已同步');
                 localStorage.setItem('habit_last_save', String(content.timestamp));
+                persistAllLocal(); // 确保本地数据已保存
                 if(!isAuto) alert("✅ 同步成功：数据已上传至云端");
             }
         } catch(e) {
