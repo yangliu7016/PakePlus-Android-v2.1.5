@@ -165,6 +165,7 @@
             display: inline-flex;
         }
         .sync-badge:active { transform: scale(0.95); background: var(--border); }
+        .sync-badge.status-syncing { cursor: not-allowed; opacity: 0.7; pointer-events: none; }
         .sync-icon { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; }
         .status-idle .sync-icon { background: var(--success); }
         .status-syncing .sync-icon { background: transparent; border: 2px solid var(--info); border-top-color: transparent; width: 10px; height: 10px; animation: spin 0.8s linear infinite; }
@@ -553,7 +554,7 @@
     <div class="header">
         <div class="header-left">
             <h1>Habit</h1>
-            <div id="syncBadge" class="sync-badge status-idle" onclick="syncGitHub('pull', false)">
+            <div id="syncBadge" class="sync-badge status-idle" onclick="if(!this.classList.contains('status-syncing')) { this.setAttribute('data-click-handled', 'true'); setTimeout(() => this.removeAttribute('data-click-handled'), 1000); syncGitHub('pull', false); }">
                 <span class="sync-icon"></span><span id="syncText">本地模式</span>
             </div>
         </div>
@@ -891,15 +892,16 @@
             <div class="card-title">数据调节</div>
             <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">修改数值，将记录至历史</div>
             <div class="row">
-                <div class="input-group"><label class="input-label">时间银行 (h)</label><input type="number" step="0.1" id="adjTimeBank"></div>
-                <div class="input-group"><label class="input-label">愿望金 (元)</label><input type="number" id="adjWallet"></div>
+                <div class="input-group"><label class="input-label">时间银行 (h)</label><input type="number" step="0.1" min="0" id="adjTimeBank"></div>
+                <div class="input-group"><label class="input-label">愿望金 (元)</label><input type="number" min="0" id="adjWallet"></div>
             </div>
-            <div class="input-group"><label class="input-label">待罚公益金 (元)</label><input type="number" id="adjDebt"></div>
+            <div class="input-group"><label class="input-label">待罚公益金 (元)</label><input type="number" min="0" id="adjDebt"></div>
             <div class="input-group">
                 <label class="input-label">修改原因</label>
                 <input type="text" id="adjReason" placeholder="原因">
             </div>
-            <button class="btn-calc" style="background:var(--primary);" onclick="applyManualAdjustment()">✓ 应用</button>
+            <button id="btnApplyManualAdjustment" type="button" class="btn-calc" style="background:var(--primary);" onclick="applyManualAdjustment(event)">✓ 应用</button>
+            <div id="manualAdjustmentStatus" style="margin-top:8px; font-size:12px; color:var(--text-sub);"></div>
         </div>
 
         <div class="card">
@@ -984,6 +986,10 @@
                 <div class="input-group">
                     <label class="input-label">需改进的</label>
                     <textarea id="reviewImprove" placeholder="改进..." rows="2"></textarea>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">感悟</label>
+                    <textarea id="reviewInsight" placeholder="感悟..." rows="2"></textarea>
                 </div>
             </div>
 
@@ -1121,6 +1127,10 @@
                         <div class="input-group">
                             <label class="input-label">需改进的</label>
                             <textarea id="checkinModalReviewImprove" placeholder="改进..." rows="2"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">感悟</label>
+                            <textarea id="checkinModalReviewInsight" placeholder="感悟..." rows="2"></textarea>
                         </div>
                     </div>
 
@@ -1390,6 +1400,14 @@
     let historyFullView = false;
     let isReviewHistoryOpen = false;
 
+    // “已结束入列时间”的分界点：用于把旧数据（没有真正入列时间，或历史补写的 endedAt）统一排到后面
+    // 只有在 cutoff 之后进入“已结束”的项目，才会被排到前面，方便你看到“刚刚发生的改变”。
+    let endedAtCutoff = Number(localStorage.getItem('habit_endedAt_cutoff_v1'));
+    if (!Number.isFinite(endedAtCutoff) || endedAtCutoff <= 0) {
+        endedAtCutoff = Date.now();
+        try { localStorage.setItem('habit_endedAt_cutoff_v1', String(endedAtCutoff)); } catch (_) {}
+    }
+
     function switchPage(id){
         if (typeof closeAllMenus === 'function') closeAllMenus();
 
@@ -1479,13 +1497,41 @@
             startTimestamp = Date.now() - (timerSeconds * 1000);
         }
         
+        // 兼容：如果输入框不存在（比如在待办页面），从已保存的状态或全局变量获取
+        const taskNameEl = document.getElementById('timerTaskName');
+        const noteEl = document.getElementById('timerNote');
+        let taskName = '';
+        let note = '';
+        let todoId = null;
+        
+        if (taskNameEl) {
+            taskName = taskNameEl.value || '';
+            todoId = taskNameEl.getAttribute('data-todo-id') || null;
+        } else if (existingState) {
+            // 如果输入框不存在，尝试从已保存的状态恢复
+            try {
+                const parsed = JSON.parse(existingState);
+                taskName = parsed.taskName || '';
+                todoId = parsed.todoId || null;
+            } catch (_) {}
+        }
+        
+        if (noteEl) {
+            note = noteEl.value || '';
+        } else if (existingState) {
+            try {
+                const parsed = JSON.parse(existingState);
+                note = parsed.note || '';
+            } catch (_) {}
+        }
+        
         const timerState = {
             running: timerRunning,
             paused: timerPaused,
             seconds: timerSeconds,
-            taskName: document.getElementById('timerTaskName').value || '',
-            note: document.getElementById('timerNote').value || '',
-            todoId: document.getElementById('timerTaskName').getAttribute('data-todo-id') || null,
+            taskName: taskName,
+            note: note,
+            todoId: todoId,
             fromPlan: isTimerFromPlan,
             lastUpdate: Date.now(),
             startTimestamp: startTimestamp // 保持原有的开始时间戳
@@ -1783,8 +1829,38 @@
     function setSyncBadgeStatus(status, text) {
         const badge = document.getElementById('syncBadge');
         const badgeText = document.getElementById('syncText');
-        badge.className = `sync-badge ${status}`;
-        if (typeof text === 'string') badgeText.innerText = text;
+        const syncIcon = badge ? badge.querySelector('.sync-icon') : null;
+        if (!badge) {
+            console.warn('syncBadge元素未找到');
+            return;
+        }
+        console.log('设置同步状态:', status, text);
+        // 移除所有状态类，然后添加新状态类
+        badge.className = badge.className.replace(/\s*status-\w+/g, '');
+        badge.className = `sync-badge ${status}`.trim();
+        if (badgeText && typeof text === 'string') {
+            badgeText.innerText = text;
+        }
+        // AIGC START
+        // 如果切换到syncing状态，重置动画以确保立即开始，并禁用点击
+        if (status === 'status-syncing' && syncIcon) {
+            syncIcon.style.animation = 'none';
+            void syncIcon.offsetHeight;
+            syncIcon.style.animation = '';
+            // 确保动画类正确应用
+            syncIcon.style.display = 'inline-block';
+            // 禁用按钮点击，防止重复触发
+            badge.style.pointerEvents = 'none';
+            badge.style.cursor = 'not-allowed';
+        } else {
+            // 恢复按钮点击
+            badge.style.pointerEvents = '';
+            badge.style.cursor = 'pointer';
+        }
+        // 强制浏览器立即重绘，确保状态变化可见
+        void badge.offsetHeight;
+        console.log('同步状态已设置，当前类名:', badge.className);
+        // AIGC END
     }
 
     function initTodoTime() {
@@ -2412,13 +2488,16 @@
             const modalContent = document.getElementById('debtModalContent');
             
             if (statsPage && modalContent) {
-                // 克隆所有卡片，但排除第一个（统计数据卡片）
+                // 克隆所有卡片，但排除第一个（统计数据卡片）和 paySection（支付卡片，因为modal中会动态创建）
                 const allCards = statsPage.querySelectorAll('.card');
                 modalContent.innerHTML = '';
                 
                 // 从第二个卡片开始克隆（跳过第一个统计数据卡片）
                 for (let i = 1; i < allCards.length; i++) {
-                    const clonedCard = allCards[i].cloneNode(true);
+                    const card = allCards[i];
+                    // 排除 paySection（支付卡片在modal中会动态创建，避免重复）
+                    if (card.id === 'paySection') continue;
+                    const clonedCard = card.cloneNode(true);
                     modalContent.appendChild(clonedCard);
                 }
             }
@@ -2427,6 +2506,11 @@
         }
         
         modal.classList.add('show');
+        
+        // 先计算资金，确保globalDebt是最新的
+        if (typeof calculateFunds === 'function') {
+            calculateFunds();
+        }
         
         // 更新模态框中的历史列表（确保事件绑定正确）
         if (typeof updateDebtModalHistoryList === 'function') {
@@ -2517,12 +2601,14 @@
     // 加载复盘内容到modal
     function loadCheckinModalReview(date) {
         try {
-            const review = dailyReviews[date] || { great: '', improve: '' };
+            const review = dailyReviews[date] || { great: '', improve: '', insight: '' };
             const greatInput = document.getElementById('checkinModalReviewGreat');
             const improveInput = document.getElementById('checkinModalReviewImprove');
+            const insightInput = document.getElementById('checkinModalReviewInsight');
             
             if (greatInput) greatInput.value = review.great || '';
             if (improveInput) improveInput.value = review.improve || '';
+            if (insightInput) insightInput.value = review.insight || '';
         } catch (e) {
             console.error('loadCheckinModalReview error:', e);
         }
@@ -2534,10 +2620,12 @@
             const today = getLocalTodayStr();
             const great = document.getElementById('checkinModalReviewGreat').value.trim();
             const improve = document.getElementById('checkinModalReviewImprove').value.trim();
+            const insight = document.getElementById('checkinModalReviewInsight').value.trim();
             
             if (!dailyReviews[today]) dailyReviews[today] = {};
             dailyReviews[today].great = great;
             dailyReviews[today].improve = improve;
+            dailyReviews[today].insight = insight;
             
             localStorage.setItem('habit_daily_reviews_v1', JSON.stringify(dailyReviews));
             triggerAutoSave();
@@ -2584,7 +2672,7 @@
 
         list.innerHTML = sortedDates.map(date => {
             const r = dailyReviews[date];
-            if (!r || (!r.great && !r.improve)) return '';
+            if (!r || (!r.great && !r.improve && !r.insight)) return '';
             return `
                 <div class="review-history-item" style="padding:12px; border-bottom:1px solid var(--border); cursor:pointer;" onclick="loadCheckinModalReview('${date}'); toggleCheckinModalHistoryReview();">
                     <div class="review-history-date" style="font-weight:700; color:var(--primary); margin-bottom:8px;">${date}</div>
@@ -2594,7 +2682,11 @@
                     ` : ''}
                     ${r.improve ? `
                         <div style="font-size:12px; color:var(--text-sub); margin-bottom:4px;">需改进的:</div>
-                        <div style="color:var(--text-main);">${r.improve}</div>
+                        <div style="color:var(--text-main); margin-bottom:8px;">${r.improve}</div>
+                    ` : ''}
+                    ${r.insight ? `
+                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:4px;">感悟:</div>
+                        <div style="color:var(--text-main);">${r.insight}</div>
                     ` : ''}
                 </div>
             `;
@@ -2950,14 +3042,14 @@
         // 如果有更多，显示一个提示
         if (!timerFullView && timerRecords.length > limit) {
             container.insertAdjacentHTML('beforeend', 
-                `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleTimerFullView(); renderTimerHistoryForModal(document.querySelector('#timerModalContent #timerHistoryListModal')); renderTimerHistory();">
-                    更多
+                `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleTimerFullView(); renderTimerHistoryForModal(document.querySelector('#timerModalContent #timerHistoryListModal')); renderTimerHistory();" title="展开更多">
+                    ⬇️
                 </div>`
             );
         } else if (timerFullView && timerRecords.length > (config.timerLimit || 5)) {
             container.insertAdjacentHTML('beforeend', 
-                `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleTimerFullView(); renderTimerHistoryForModal(document.querySelector('#timerModalContent #timerHistoryListModal')); renderTimerHistory();">
-                    收起
+                `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleTimerFullView(); renderTimerHistoryForModal(document.querySelector('#timerModalContent #timerHistoryListModal')); renderTimerHistory();" title="收起">
+                    ⬆️
                 </div>`
             );
         }
@@ -3584,6 +3676,34 @@
         setTimeout(() => isDeleting = false, 500);
     }
 
+    // 待办的“到期时间戳”（用于逾期/已结束排序）
+    function getTodoDueTimestamp(t) {
+        try {
+            if (!t || !t.date || !t.time) return 0;
+            const ms = new Date(`${t.date}T${t.time}:00`).getTime();
+            return Number.isFinite(ms) ? ms : 0;
+        } catch (_) {
+            return 0;
+        }
+    }
+
+    // 待办的“进入已结束/已过期”的时间戳（用于排序）
+    // 你的期望是“什么时候被放进已结束列表”，因此只认 endedAt（入列时间）；
+    // 对于手动归档：用 archivedAt 作为入列时间；其它情况若无 endedAt 则视为“刚刚入列”。
+    function getTodoEndedTimestamp(t) {
+        // 关键：历史数据可能被旧逻辑写入过 endedAt，但那不是“真实入列时间”。
+        // 只有 endedAtV === 1（本版本开始新增）才认为是“新入列”，用于排到前面。
+        if (!t || t.endedAtV !== 1) return 0;
+
+        const endedAt = Number(t && t.endedAt);
+        if (Number.isFinite(endedAt) && endedAt > 0) return endedAt;
+
+        const archivedAt = Number(t && t.archivedAt);
+        if (Number.isFinite(archivedAt) && archivedAt > 0) return archivedAt;
+
+        return 0;
+    }
+
     function checkTodoTypeChange() {
         const type = document.getElementById('todoType').value;
         if(type === 'other') {
@@ -3641,22 +3761,25 @@
             else { document.getElementById('list-other').insertAdjacentHTML('beforeend', html); document.getElementById('head-other').classList.add('show'); }
         });
 
-        // 3. 渲染 Expired (按归档时间排序，倒序)
+        // 3. 渲染 Expired（按进入“已结束/已过期”的先后排序，倒序：最新在前）
         if(expiredItems.length > 0) {
             expiredItems.sort((a, b) => {
-                // 按归档时间排序（倒序，最新归档的在前）
-                const archiveTimeA = a.archivedAt || 0;
-                const archiveTimeB = b.archivedAt || 0;
+                // 按“入列时间”倒序：最新入列的在前
+                const endA = getTodoEndedTimestamp(a);
+                const endB = getTodoEndedTimestamp(b);
                 
-                // 如果都有归档时间，按归档时间倒序
-                if (archiveTimeA > 0 && archiveTimeB > 0) {
-                    return archiveTimeB - archiveTimeA;
+                // 如果都有结束时间，按结束时间倒序
+                if (endA > 0 && endB > 0) {
+                    const diff = endB - endA;
+                    if (diff !== 0) return diff;
+                    // 二级排序：保持稳定（id 倒序）
+                    return String(b.id).localeCompare(String(a.id));
                 }
-                // 如果只有一个有归档时间，有归档时间的排在前面
-                if (archiveTimeA > 0) return -1;
-                if (archiveTimeB > 0) return 1;
+                // 如果只有一个有结束时间，有结束时间的排在前面
+                if (endA > 0) return -1;
+                if (endB > 0) return 1;
                 
-                // 都没有归档时间（自动过期的），按事件时间倒序作为fallback
+                // 都没有结束时间（极端旧数据），按事件时间倒序作为fallback
                 const dtA = a.date + a.time;
                 const dtB = b.date + b.time;
                 return dtB.localeCompare(dtA);
@@ -3672,14 +3795,14 @@
             // 如果有更多，显示一个提示
             if (!expiredFullView && expiredItems.length > limit) {
                 document.getElementById('list-expired').insertAdjacentHTML('beforeend', 
-                    `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleExpiredFullView()">
-                        更多
+                    `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleExpiredFullView()" title="展开更多">
+                        ⬇️
                     </div>`
                 );
             } else if (expiredFullView && expiredItems.length > (config.expiredLimit || 5)) {
                 document.getElementById('list-expired').insertAdjacentHTML('beforeend', 
-                    `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleExpiredFullView()">
-                        收起
+                    `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleExpiredFullView()" title="收起">
+                        ⬆️
                     </div>`
                 );
             }
@@ -3928,6 +4051,9 @@
                 t.penalty = penalty;
                 t.status = 'pending';
                 delete t.archived; // 编辑后取消归档状态
+                delete t.archivedAt;
+                delete t.endedAt;
+                delete t.endedAtV;
             }
         } else {
             const newId = 't_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -4037,6 +4163,8 @@
         if (t) {
             t.archived = true;
             t.archivedAt = Date.now(); // 记录归档时间戳
+            t.endedAt = t.archivedAt; // 进入“已结束/已过期”的时间戳（用于排序）
+            t.endedAtV = 1; // 标记：本版本产生的“真实入列时间”
             renderTodos();
             triggerAutoSave();
         }
@@ -4144,6 +4272,10 @@
         
         // 恢复状态为pending
         t.status = 'pending';
+        delete t.archived;
+        delete t.archivedAt;
+        delete t.endedAt;
+        delete t.endedAtV;
         
         // 如果日期是过去的，更新为今天
         const todayStr = getLocalTodayStr();
@@ -4163,14 +4295,32 @@
         let changed = false;
 
         todoList.forEach(t => {
-            if (t.date === todayStr && t.status === 'pending' && currentHm > t.time) {
+            // 逾期判定：
+            // - 跨天：日期早于今天且仍 pending
+            // - 当天：到达/超过设定时间且仍 pending
+            const isOverdue =
+                (t.status === 'pending') &&
+                (
+                    (t.date < todayStr) ||
+                    (t.date === todayStr && currentHm >= t.time)
+                );
+
+            if (isOverdue) {
                 if (t.type === 'dont') {
                     t.status = 'expired_success';
-                    saveRecord({ fund: t.reward, title: t.title, theme: 'theme-success', details: { note: '坚持达成', recordType: 'todo-success' } }, false);
+                    const recordId = Date.now();
+                    saveRecord({ fund: t.reward, title: t.title, theme: 'theme-success', details: { type: 'Todo结算', result: 'expired_success', note: '坚持达成', recordType: 'todo-success', todoId: String(t.id) } }, false);
+                    t.finishRecordId = recordId;
+                    t.endedAt = Date.now(); // 用“入列时刻”排序（符合你的需求）
+                    t.endedAtV = 1; // 标记：本版本产生的“真实入列时间”
                     changed = true;
                 } else {
                     t.status = 'expired_fail';
-                    saveRecord({ fund: -t.penalty, title: t.title, theme: 'theme-pay', details: { note: '超时未完成', recordType: 'todo-fail' } }, false);
+                    const recordId = Date.now();
+                    saveRecord({ fund: -t.penalty, title: t.title, theme: 'theme-pay', details: { type: 'Todo结算', result: 'expired_fail', note: '超时未完成', recordType: 'todo-fail', todoId: String(t.id) } }, false);
+                    t.finishRecordId = recordId;
+                    t.endedAt = Date.now(); // 用“入列时刻”排序（符合你的需求）
+                    t.endedAtV = 1; // 标记：本版本产生的“真实入列时间”
                     changed = true;
                 }
             }
@@ -4429,6 +4579,52 @@
         reader.readAsDataURL(file);
     }
 
+    function handleDebtModalPayment(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width, height = img.height;
+                if(width > 800) { height *= 800 / width; width = 800; }
+                canvas.width = width; canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                const payAmount = globalDebt;
+                saveRecord({ fund: -payAmount, title: '支付清零', theme: 'theme-pay', details: { image: dataUrl, note: '上传凭证清零' } }, false);
+                alert("✅ 支付凭证已上传，债务已清零！");
+                
+                // 更新modal中的显示
+                const debtModalAmount = document.getElementById('debtModalAmount');
+                const payCard = input.closest('.card');
+                if (payCard) {
+                    // 如果债务已清零，隐藏支付卡片
+                    if (globalDebt <= 0) {
+                        payCard.style.display = 'none';
+                    } else {
+                        // 否则更新金额显示
+                        if (debtModalAmount) {
+                            debtModalAmount.innerText = globalDebt.toFixed(0);
+                        }
+                    }
+                }
+                
+                // 更新modal中的历史列表
+                if (typeof updateDebtModalHistoryList === 'function') {
+                    updateDebtModalHistoryList();
+                }
+                
+                // 清理内存
+                reader.onload = null;
+                img.onload = null;
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     function updateUI() {
         calculateFunds();
         document.getElementById('timeBankDisplay').innerText = (Number(timeBank) || 0).toFixed(1); // 更新时间银行显示
@@ -4459,20 +4655,20 @@
                 if(i.details && i.details.image) {
                     imgHtml = `<img src="${i.details.image}" class="record-img" onclick="const w=window.open('about:blank');w.document.write('<img src=${i.details.image} style=width:100%>')">`;
                 }
-                    return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
+                    return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; if(k==='todoId') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
                 }).join('');
 
                 // 如果有更多，显示一个提示
                 if (!historyFullView && historyData.length > limit) {
                     list.insertAdjacentHTML('beforeend', 
-                        `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleHistoryFullView()">
-                            更多
+                        `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="展开更多">
+                            ⬇️
                         </div>`
                     );
                 } else if (historyFullView && historyData.length > (config.historyLimit || 5)) {
                     list.insertAdjacentHTML('beforeend', 
-                        `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleHistoryFullView()">
-                            收起
+                        `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="收起">
+                            ⬆️
                         </div>`
                     );
                 }
@@ -4509,10 +4705,6 @@
         const debtModal = document.getElementById('debtModal');
         if (debtModal && debtModal.classList.contains('show')) {
             document.getElementById('debtModalDisplay').innerText = globalDebt.toFixed(0);
-            const paySectionModal = document.getElementById('debtPaySection');
-            if (paySectionModal) {
-                paySectionModal.style.display = globalDebt > 0 ? 'block' : 'none';
-            }
             // 更新统计数据
             const todayStr = getLocalTodayStr();
             const todayHistory = historyData.filter(r => r.date === todayStr && !['theme-skip','theme-shop','theme-pay'].includes(r.theme));
@@ -4536,103 +4728,174 @@
         if (!modalContent) return;
         
         const modalHistoryList = modalContent.querySelector('#historyList');
-        if (!modalHistoryList) return;
         
-        // 更新模态框中的历史列表
-        if (historyData.length === 0) {
-            modalHistoryList.innerHTML = '<div style="color:var(--text-sub);text-align:center;padding:30px;">暂无记录</div>';
-        } else {
-            const limit = historyFullView ? historyData.length : (config.historyLimit || 5);
-            const displayedHistory = historyData.slice(0, limit);
-            
-            modalHistoryList.innerHTML = displayedHistory.map(i => {
-                // 确保类型一致进行比较
-                let isEditing = false;
-                if (editingHistoryItemId != null) {
-                    const itemId = typeof i.id === 'string' ? parseInt(i.id, 10) : i.id;
-                    const editingId = typeof editingHistoryItemId === 'string' ? parseInt(editingHistoryItemId, 10) : editingHistoryItemId;
-                    isEditing = (editingId == itemId);
-                }
+        // 更新模态框中的历史列表（如果存在）
+        if (modalHistoryList) {
+            if (historyData.length === 0) {
+                modalHistoryList.innerHTML = '<div style="color:var(--text-sub);text-align:center;padding:30px;">暂无记录</div>';
+            } else {
+                const limit = historyFullView ? historyData.length : (config.historyLimit || 5);
+                const displayedHistory = historyData.slice(0, limit);
                 
-                if (isEditing) {
-                    return `
-                    <div class="inline-editor">
-                        <div class="input-group"><label class="input-label">记录标题</label><input type="text" id="editItemTitle-${i.id}" value="${i.title}" style="font-weight:bold;"></div>
-                        <div class="input-group"><label class="input-label">金额 (元)</label><input type="number" id="editItemFund-${i.id}" value="${i.fund}"></div>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn-mini" style="background:var(--success); color:#fff; flex:1" onclick="event.stopPropagation(); saveInlineHistoryItem(${i.id})">💾 保存</button>
-                            <button class="btn-mini" style="background:var(--border); color:var(--text-main); flex:1" onclick="event.stopPropagation(); cancelInlineEdit()">✕ 取消</button>
-                        </div>
-                    </div>`;
-                }
-                
-                let imgHtml = '';
-                if(i.details && i.details.image) {
-                    imgHtml = `<img src="${i.details.image}" class="record-img" onclick="const w=window.open('about:blank');w.document.write('<img src=${i.details.image} style=width:100%>')">`;
-                }
-                return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="event.stopPropagation(); editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="event.stopPropagation(); deleteItem(${i.id})">✕</div> </div> </div>`;
-            }).join('');
-            
-            // 如果有更多，显示一个提示
-            if (!historyFullView && historyData.length > limit) {
-                modalHistoryList.insertAdjacentHTML('beforeend', 
-                    `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleHistoryFullView()">
-                        更多
-                    </div>`
-                );
-            } else if (historyFullView && historyData.length > (config.historyLimit || 5)) {
-                modalHistoryList.insertAdjacentHTML('beforeend', 
-                    `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleHistoryFullView()">
-                        收起
-                    </div>`
-                );
-            }
-            
-            // 在历史档案后面添加计时记录
-            if (timerRecords && timerRecords.length > 0) {
-                const timerLimit = timerFullView ? timerRecords.length : (config.timerLimit || 5);
-                const displayedTimerRecords = timerRecords.slice(0, timerLimit);
-                
-                // 添加分隔线
-                modalHistoryList.insertAdjacentHTML('beforeend', 
-                    `<div style="border-top:1px solid var(--border); margin:12px 0; padding-top:12px;">
-                        <div style="font-size:12px; color:var(--text-sub); font-weight:600; margin-bottom:8px;">⏱️ 计时记录</div>
-                    </div>`
-                );
-                
-                // 添加计时记录
-                displayedTimerRecords.forEach(r => {
-                    const startTime = r.startTime || calculateStartTime(r.time, r.duration);
-                    const timerHtml = `
-                        <div class="list-item">
-                            <div style="flex:1">
-                                <div style="font-weight:bold; color:var(--text-main);">${formatTaskName(r.name)}</div>
-                                <div style="font-size:12px; color:var(--primary);">${r.duration}h | ${r.date} ${startTime} - ${r.time}</div>
-                                ${r.note ? '<div style="font-size:11px; color:var(--text-sub); margin-top:4px; background:var(--input-bg); padding:4px; border-radius:4px;">' + r.note + '</div>' : ''}
-                            </div>
+                modalHistoryList.innerHTML = displayedHistory.map(i => {
+                    // 确保类型一致进行比较
+                    let isEditing = false;
+                    if (editingHistoryItemId != null) {
+                        const itemId = typeof i.id === 'string' ? parseInt(i.id, 10) : i.id;
+                        const editingId = typeof editingHistoryItemId === 'string' ? parseInt(editingHistoryItemId, 10) : editingHistoryItemId;
+                        isEditing = (editingId == itemId);
+                    }
+                    
+                    if (isEditing) {
+                        return `
+                        <div class="inline-editor">
+                            <div class="input-group"><label class="input-label">记录标题</label><input type="text" id="editItemTitle-${i.id}" value="${i.title}" style="font-weight:bold;"></div>
+                            <div class="input-group"><label class="input-label">金额 (元)</label><input type="number" id="editItemFund-${i.id}" value="${i.fund}"></div>
                             <div style="display:flex; gap:8px;">
-                                <div class="btn-action" onclick="editTimerRecord(${r.id})">✏️</div>
-                                <div class="btn-action btn-del" onclick="deleteTimerRecord(${r.id})">✕</div>
+                                <button class="btn-mini" style="background:var(--success); color:#fff; flex:1" onclick="event.stopPropagation(); saveInlineHistoryItem(${i.id})">💾 保存</button>
+                                <button class="btn-mini" style="background:var(--border); color:var(--text-main); flex:1" onclick="event.stopPropagation(); cancelInlineEdit()">✕ 取消</button>
                             </div>
-                        </div>
-                    `;
-                    modalHistoryList.insertAdjacentHTML('beforeend', timerHtml);
-                });
+                        </div>`;
+                    }
+                    
+                    let imgHtml = '';
+                    if(i.details && i.details.image) {
+                        imgHtml = `<img src="${i.details.image}" class="record-img" onclick="const w=window.open('about:blank');w.document.write('<img src=${i.details.image} style=width:100%>')">`;
+                    }
+                    return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; if(k==='todoId') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="event.stopPropagation(); editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="event.stopPropagation(); deleteItem(${i.id})">✕</div> </div> </div>`;
+                }).join('');
                 
-                // 如果有更多计时记录，显示提示
-                if (!timerFullView && timerRecords.length > timerLimit) {
+                // 如果有更多，显示一个提示
+                if (!historyFullView && historyData.length > limit) {
                     modalHistoryList.insertAdjacentHTML('beforeend', 
-                        `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleTimerFullView(); updateDebtModalHistoryList();">
-                            更多计时记录
+                        `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="historyFullView = true; updateDebtModalHistoryList(); updateUI();" title="展开更多">
+                            ⬇️
                         </div>`
                     );
-                } else if (timerFullView && timerRecords.length > (config.timerLimit || 5)) {
+                } else if (historyFullView && historyData.length > (config.historyLimit || 5)) {
                     modalHistoryList.insertAdjacentHTML('beforeend', 
-                        `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleTimerFullView(); updateDebtModalHistoryList();">
-                            收起计时记录
+                        `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="historyFullView = false; updateDebtModalHistoryList(); updateUI();" title="收起">
+                            ⬆️
                         </div>`
                     );
                 }
+                
+                // 在历史档案后面添加计时记录
+                if (timerRecords && timerRecords.length > 0) {
+                    const timerLimit = timerFullView ? timerRecords.length : (config.timerLimit || 5);
+                    const displayedTimerRecords = timerRecords.slice(0, timerLimit);
+                    
+                    // 添加分隔线
+                    modalHistoryList.insertAdjacentHTML('beforeend', 
+                        `<div style="border-top:1px solid var(--border); margin:12px 0; padding-top:12px;">
+                            <div style="font-size:12px; color:var(--text-sub); font-weight:600; margin-bottom:8px;">⏱️ 计时记录</div>
+                        </div>`
+                    );
+                    
+                    // 添加计时记录
+                    displayedTimerRecords.forEach(r => {
+                        const startTime = r.startTime || calculateStartTime(r.time, r.duration);
+                        const timerHtml = `
+                            <div class="list-item">
+                                <div style="flex:1">
+                                    <div style="font-weight:bold; color:var(--text-main);">${formatTaskName(r.name)}</div>
+                                    <div style="font-size:12px; color:var(--primary);">${r.duration}h | ${r.date} ${startTime} - ${r.time}</div>
+                                    ${r.note ? '<div style="font-size:11px; color:var(--text-sub); margin-top:4px; background:var(--input-bg); padding:4px; border-radius:4px;">' + r.note + '</div>' : ''}
+                                </div>
+                                <div style="display:flex; gap:8px;">
+                                    <div class="btn-action" onclick="editTimerRecord(${r.id})">✏️</div>
+                                    <div class="btn-action btn-del" onclick="deleteTimerRecord(${r.id})">✕</div>
+                                </div>
+                            </div>
+                        `;
+                        modalHistoryList.insertAdjacentHTML('beforeend', timerHtml);
+                    });
+                    
+                    // 如果有更多计时记录，显示提示
+                    if (!timerFullView && timerRecords.length > timerLimit) {
+                        modalHistoryList.insertAdjacentHTML('beforeend', 
+                            `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleTimerFullView(); updateDebtModalHistoryList();" title="展开更多计时记录">
+                                ⬇️
+                            </div>`
+                        );
+                    } else if (timerFullView && timerRecords.length > (config.timerLimit || 5)) {
+                        modalHistoryList.insertAdjacentHTML('beforeend', 
+                            `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleTimerFullView(); updateDebtModalHistoryList();" title="收起计时记录">
+                                ⬆️
+                            </div>`
+                        );
+                    }
+                }
+            }
+        }
+        
+        // 在历史档案卡片后面添加或更新支付惩罚金卡片
+        // 先确保globalDebt是最新的
+        if (typeof calculateFunds === 'function') {
+            calculateFunds();
+        }
+        
+        // 尝试通过多种方式找到历史档案卡片
+        let historyCard = null;
+        if (modalHistoryList) {
+            historyCard = modalHistoryList.closest('.card');
+        }
+        if (!historyCard) {
+            // 如果通过historyList找不到，尝试直接查找包含"历史档案"文本的卡片
+            const allCards = modalContent.querySelectorAll('.card');
+            for (let card of allCards) {
+                const cardTitle = card.querySelector('.card-title');
+                if (cardTitle && (cardTitle.textContent.includes('历史档案') || cardTitle.textContent.includes('历史'))) {
+                    historyCard = card;
+                    break;
+                }
+            }
+        }
+        
+        // 检查是否已存在支付卡片（通过ID查找）
+        let payCard = modalContent.querySelector('#debtModalPayCard');
+        
+        if (historyCard) {
+            if (payCard) {
+                // 支付卡片已存在，更新或隐藏
+                if (globalDebt > 0) {
+                    payCard.style.display = 'block';
+                    const debtModalAmount = payCard.querySelector('#debtModalAmount');
+                    if (debtModalAmount) {
+                        debtModalAmount.innerText = globalDebt.toFixed(0);
+                    }
+                } else {
+                    payCard.style.display = 'none';
+                }
+            } else if (globalDebt > 0) {
+                // 支付卡片不存在且债务大于0，创建支付卡片
+                payCard = document.createElement('div');
+                payCard.id = 'debtModalPayCard';
+                payCard.className = 'card';
+                payCard.style.cssText = 'background:var(--danger-bg); border-color:var(--danger); text-align:center; margin-top:16px;';
+                payCard.innerHTML = `
+                    <div style="color:var(--danger); font-weight:800; font-size:28px; margin:10px 0;" id="debtModalAmount">${globalDebt.toFixed(0)}</div>
+                    <div style="color:var(--danger); font-size:13px; margin-bottom:15px; opacity:0.8;">待罚公益金</div>
+                    <button class="btn-calc" style="background:var(--danger); width:auto; margin:0 auto;" onclick="document.getElementById('debtModalFileInput').click()">📸 上传凭证并清零</button>
+                    <input type="file" id="debtModalFileInput" hidden accept="image/*" onchange="handleDebtModalPayment(this)">
+                `;
+                // 在历史档案卡片后插入支付卡片
+                historyCard.insertAdjacentElement('afterend', payCard);
+            }
+        } else {
+            // 如果找不到历史档案卡片，但仍然有债务，尝试在modalContent的最后添加支付卡片
+            if (!payCard && globalDebt > 0) {
+                payCard = document.createElement('div');
+                payCard.id = 'debtModalPayCard';
+                payCard.className = 'card';
+                payCard.style.cssText = 'background:var(--danger-bg); border-color:var(--danger); text-align:center; margin-top:16px;';
+                payCard.innerHTML = `
+                    <div style="color:var(--danger); font-weight:800; font-size:28px; margin:10px 0;" id="debtModalAmount">${globalDebt.toFixed(0)}</div>
+                    <div style="color:var(--danger); font-size:13px; margin-bottom:15px; opacity:0.8;">待罚公益金</div>
+                    <button class="btn-calc" style="background:var(--danger); width:auto; margin:0 auto;" onclick="document.getElementById('debtModalFileInput').click()">📸 上传凭证并清零</button>
+                    <input type="file" id="debtModalFileInput" hidden accept="image/*" onchange="handleDebtModalPayment(this)">
+                `;
+                modalContent.appendChild(payCard);
             }
         }
         
@@ -4724,19 +4987,19 @@
                     if(i.details && i.details.image) {
                         imgHtml = `<img src="${i.details.image}" class="record-img" onclick="const w=window.open('about:blank');w.document.write('<img src=${i.details.image} style=width:100%>')">`;
                     }
-                    return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
+                    return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; if(k==='todoId') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
                 }).join('');
                 
                 if (!historyFullView && historyData.length > limit) {
                     list.insertAdjacentHTML('beforeend', 
-                        `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleHistoryFullView()">
-                            更多
+                        `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="展开更多">
+                            ⬇️
                         </div>`
                     );
                 } else if (historyFullView && historyData.length > (config.historyLimit || 5)) {
                     list.insertAdjacentHTML('beforeend', 
-                        `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleHistoryFullView()">
-                            收起
+                        `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="收起">
+                            ⬆️
                         </div>`
                     );
                 }
@@ -4761,20 +5024,20 @@
                             if(i.details && i.details.image) {
                                 imgHtml = `<img src="${i.details.image}" class="record-img" onclick="const w=window.open('about:blank');w.document.write('<img src=${i.details.image} style=width:100%>')">`;
                             }
-                            return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
+                            return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; if(k==='todoId') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
                         }).join('');
                         
                         // 如果有更多，显示一个提示
                         if (!historyFullView && historyData.length > limit) {
                             modalHistoryList.insertAdjacentHTML('beforeend', 
-                                `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleHistoryFullView()">
-                                    更多
+                                `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="展开更多">
+                                    ⬇️
                                 </div>`
                             );
                         } else if (historyFullView && historyData.length > (config.historyLimit || 5)) {
                             modalHistoryList.insertAdjacentHTML('beforeend', 
-                                `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleHistoryFullView()">
-                                    收起
+                                `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="收起">
+                                    ⬆️
                                 </div>`
                             );
                         }
@@ -4829,10 +5092,29 @@
     function calculateFunds() {
         let wallet = 0, debt = 0;
         historyData.forEach(i => {
-            if(['theme-success'].includes(i.theme) || (i.details && i.details.recordType === 'todo-success')) { wallet += Math.abs(i.fund); }
-            else if(i.theme === 'theme-shop') { wallet += i.fund; }
-            else if(['theme-fix', 'theme-repair', 'theme-prevent'].includes(i.theme) || (i.details && i.details.recordType === 'todo-fail')) { debt += Math.abs(i.fund); }
-            else if(i.theme === 'theme-pay') { debt -= Math.abs(i.fund); }
+            const fund = Number.isFinite(Number(i.fund)) ? Number(i.fund) : (parseFloat(i.fund) || 0);
+            const absFund = Math.abs(fund);
+            const recordType = (i.details && i.details.recordType) ? String(i.details.recordType) : '';
+            const detailsType = (i.details && i.details.type) ? String(i.details.type) : '';
+            const detailsResult = (i.details && i.details.result) ? String(i.details.result) : '';
+            
+            const isTodoSuccess = recordType === 'todo-success' || recordType === 'todo_success'
+                || (detailsType === 'Todo结算' && detailsResult.includes('success'));
+            const isTodoFail = recordType === 'todo-fail' || recordType === 'todo_fail'
+                || (detailsType === 'Todo结算' && detailsResult.includes('fail'));
+            
+            if (i.theme === 'theme-success' || isTodoSuccess) {
+                wallet += absFund;
+            } else if (i.theme === 'theme-shop') {
+                wallet += fund; // 兑换为负数，直接累加
+            } else if (['theme-fix', 'theme-repair', 'theme-prevent', 'theme-penalty'].includes(i.theme) || isTodoFail) {
+                // 统一按“应罚金额”累计债务，不再在这里扣减 theme-pay
+                // theme-penalty：打卡罚金；isTodoFail：Todo破戒/超时未完成
+                debt += absFund;
+            } else if (i.theme === 'theme-pay' && !isTodoFail) {
+                // 支付/清零：减少债务（注意：Todo 破戒也用了 theme-pay，但此处已用 isTodoFail 排除）
+                debt -= absFund;
+            } 
         });
         globalWallet = Math.max(0, wallet); globalDebt = Math.max(0, debt);
         
@@ -4855,6 +5137,18 @@
         
         const debtDisplay = document.getElementById('debtDisplay');
         if (debtDisplay) debtDisplay.innerText = globalDebt;
+        
+        // 兼容旧版本：如果头部债务徽章中没有单独的 debtDisplay span，也强制更新其文本
+        const debtBadge = document.querySelector('.fund-badge.badge-debt');
+        if (debtBadge) {
+            const span = debtBadge.querySelector('#debtDisplay');
+            if (span) {
+                span.innerText = globalDebt;
+            } else {
+                // 保留前面的图标，只更新数字
+                debtBadge.innerHTML = `💸 ${globalDebt}`;
+            }
+        }
     }
 
     function saveRecord(data, reload = true) { historyData.unshift({ id: Date.now(), date: document.getElementById('dateInput').value, ...data }); updateUI(); triggerAutoSave(); if(reload) setTimeout(() => location.reload(), 500); }
@@ -4904,19 +5198,19 @@
                         if(i.details && i.details.image) {
                             imgHtml = `<img src="${i.details.image}" class="record-img" onclick="const w=window.open('about:blank');w.document.write('<img src=${i.details.image} style=width:100%>')">`;
                         }
-                        return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
+                        return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; if(k==='todoId') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
                     }).join('');
                     
                     if (!historyFullView && historyData.length > limit) {
                         list.insertAdjacentHTML('beforeend', 
-                            `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleHistoryFullView()">
-                                更多
+                            `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="展开更多">
+                                ⬇️
                             </div>`
                         );
                     } else if (historyFullView && historyData.length > (config.historyLimit || 5)) {
                         list.insertAdjacentHTML('beforeend', 
-                            `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleHistoryFullView()">
-                                收起
+                            `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="收起">
+                                ⬆️
                             </div>`
                         );
                     }
@@ -4943,20 +5237,20 @@
                                 if(i.details && i.details.image) {
                                     imgHtml = `<img src="${i.details.image}" class="record-img" onclick="const w=window.open('about:blank');w.document.write('<img src=${i.details.image} style=width:100%>')">`;
                                 }
-                                return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
+                                return ` <div class="list-item"> <div style="flex:1"> <div style="display:flex;justify-content:space-between;align-items:center;"> <span style="font-size:13px;color:var(--text-sub);font-weight:600">${i.date}</span> <span style="font-weight:800;font-size:16px;color:${i.fund>=0 ? (i.theme==='theme-pay'?'var(--danger)':'var(--success)') : (i.theme==='theme-shop'?'var(--warning)':'var(--danger)')}"> ${i.fund>0?'+':''}${i.fund} </span> </div> <div><span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;background:var(--border);color:var(--text-main);">${i.title}</span> ${imgHtml}</div> <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">${Object.entries(i.details||{}).map(([k,v]) => { if(k==='manual_edit_reason') return `改:${v}`; if(k==='penalty_rule') return `${v}`; if(k==='image') return ''; if(k==='todoId') return ''; return v; }).join(' · ')}</div> </div> <div style="display:flex; gap:4px;"> <div class="btn-action" onclick="editItem(${i.id})">✏️</div> <div class="btn-action btn-del" onclick="deleteItem(${i.id})">✕</div> </div> </div>`;
                             }).join('');
                             
                             // 如果有更多，显示一个提示
                             if (!historyFullView && historyData.length > limit) {
                                 modalHistoryList.insertAdjacentHTML('beforeend', 
-                                    `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleHistoryFullView()">
-                                        更多
+                                    `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="展开更多">
+                                        ⬇️
                                     </div>`
                                 );
                             } else if (historyFullView && historyData.length > (config.historyLimit || 5)) {
                                 modalHistoryList.insertAdjacentHTML('beforeend', 
-                                    `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleHistoryFullView()">
-                                        收起
+                                    `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleHistoryFullView()" title="收起">
+                                        ⬆️
                                     </div>`
                                 );
                             }
@@ -5516,10 +5810,12 @@
         const date = currentReviewDate;
         const great = document.getElementById('reviewGreat').value.trim();
         const improve = document.getElementById('reviewImprove').value.trim();
+        const insight = document.getElementById('reviewInsight').value.trim();
         
         if (!dailyReviews[date]) dailyReviews[date] = {};
         dailyReviews[date].great = great;
         dailyReviews[date].improve = improve;
+        dailyReviews[date].insight = insight;
         
         localStorage.setItem('habit_daily_reviews_v1', JSON.stringify(dailyReviews));
         triggerAutoSave();
@@ -5532,9 +5828,10 @@
 
     function loadDailyReview() {
         const date = getLocalTodayStr();
-        const review = dailyReviews[date] || { great: '', improve: '' };
+        const review = dailyReviews[date] || { great: '', improve: '', insight: '' };
         document.getElementById('reviewGreat').value = review.great || '';
         document.getElementById('reviewImprove').value = review.improve || '';
+        document.getElementById('reviewInsight').value = review.insight || '';
     }
 
     function toggleHistoryReview() {
@@ -5570,7 +5867,7 @@
 
         list.innerHTML = sortedDates.map(date => {
             const r = dailyReviews[date];
-            if (!r || (!r.great && !r.improve)) return '';
+            if (!r || (!r.great && !r.improve && !r.insight)) return '';
             return `
                 <div class="review-history-item">
                     <div class="review-history-date">${date}</div>
@@ -5581,6 +5878,10 @@
                     ${r.improve ? `
                         <div class="review-history-label">加油:</div>
                         <div class="review-history-content">${r.improve}</div>
+                    ` : ''}
+                    ${r.insight ? `
+                        <div class="review-history-label">感悟:</div>
+                        <div class="review-history-content">${r.insight}</div>
                     ` : ''}
                     <div style="text-align:right; margin-top:8px;">
                         <button class="btn-mini" style="background:var(--border); color:var(--text-main); font-size:10px;" onclick="editHistoricalReview('${date}')">✏️ 编辑</button>
@@ -5596,6 +5897,7 @@
         
         document.getElementById('reviewGreat').value = r.great || '';
         document.getElementById('reviewImprove').value = r.improve || '';
+        document.getElementById('reviewInsight').value = r.insight || '';
         currentReviewDate = date; // 切换保存目标日期
         
         // 自动切回到输入模式
@@ -5890,16 +6192,77 @@
         // 关闭所有菜单
         closeAllMenus();
         
-        // 选择待办并设置到计时器
-        selectTodoForTimer(todoId);
+        // 获取待办信息
+        const id = typeof todoId === 'string' ? todoId : String(todoId);
+        const todo = todoList.find(t => String(t.id) === id);
+        if (!todo) {
+            console.warn('待办未找到:', todoId);
+            return;
+        }
         
-        // 切换到计时页面
-        switchPage('timer');
+        // 如果计时页面的输入框存在，更新它们（用于兼容）
+        const taskNameInput = document.getElementById('timerTaskName');
+        if (taskNameInput) {
+            taskNameInput.value = todo.title;
+            taskNameInput.setAttribute('data-todo-id', id);
+        }
+        const noteInput = document.getElementById('timerNote');
+        if (noteInput) noteInput.value = todo.note || '';
+        const endTimeInput = document.getElementById('timerPlannedEndTime');
+        if (endTimeInput) endTimeInput.value = todo.time || '';
         
-        // 直接开始计时
-        setTimeout(() => {
-            startTimer();
-        }, 100);
+        // 直接开始计时（不跳转页面）
+        timerRunning = true;
+        timerPaused = false;
+        timerSeconds = 0;
+        isTimerFromPlan = false;
+        
+        // 先保存一次状态（包含任务名称），确保即使输入框不存在也能保存
+        const startTimestamp = Date.now();
+        const timerState = {
+            running: true,
+            paused: false,
+            seconds: 0,
+            taskName: todo.title,
+            note: todo.note || '',
+            todoId: id,
+            fromPlan: false,
+            lastUpdate: Date.now(),
+            startTimestamp: startTimestamp
+        };
+        localStorage.setItem('habit_timer_state_v1', JSON.stringify(timerState));
+        
+        // 更新UI（如果计时页面可见）
+        const idleBtns = document.getElementById('timerIdleBtns');
+        const activeBtns = document.getElementById('timerActiveBtns');
+        if (idleBtns) idleBtns.style.display = 'none';
+        if (activeBtns) activeBtns.style.display = 'flex';
+        
+        updateTimerModalButtons();
+        updateStickyNotif(); // 显示置顶通知栏
+        triggerAutoSave();
+        
+        // 启动计时器
+        timerInterval = setInterval(() => {
+            if (!timerPaused) {
+                timerSeconds++;
+                updateTimerUI();
+                saveTimerState();
+            }
+        }, 1000);
+        
+        // 启动云端同步
+        timerSyncInterval = setInterval(async () => {
+            if (timerRunning && ghConfig.token && ghConfig.repo) {
+                console.log('🔄 定期同步计时器状态...');
+                await syncGitHub('pull', true);
+                if (timerRunning) {
+                    triggerAutoSave();
+                }
+            } else if (timerRunning) {
+                saveTimerState();
+            }
+        }, 30000);
     }
 
     function startFromPlan(id) {
@@ -6151,7 +6514,26 @@
 
     function stopTimer() {
         const hours = timerSeconds / 3600;
-        const taskName = document.getElementById('timerTaskName').value;
+        
+        // 兼容：从页面输入框或保存的状态中获取任务名称
+        const taskInput = document.getElementById('timerTaskName');
+        let taskName = '';
+        if (taskInput) {
+            taskName = taskInput.value || '';
+        }
+        if (!taskName) {
+            const savedState = localStorage.getItem('habit_timer_state_v1');
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    taskName = parsed.taskName || '未命名任务';
+                } catch (_) {
+                    taskName = '未命名任务';
+                }
+            } else {
+                taskName = '未命名任务';
+            }
+        }
         
         showModal({
             title: '结束计时',
@@ -6167,12 +6549,39 @@
         clearInterval(timerInterval);
         clearInterval(timerSyncInterval); // 清除同步定时器
         const hours = timerSeconds / 3600;
-        const taskName = document.getElementById('timerTaskName').value;
-        const note = document.getElementById('timerNote').value;
         const endTime = new Date().toTimeString().slice(0, 5);
         const startTime = calculateStartTime(endTime, hours);
+        
+        // 兼容：从页面输入框或保存的状态中获取任务信息
         const taskInput = document.getElementById('timerTaskName');
-        const todoId = taskInput.getAttribute('data-todo-id');
+        const noteInput = document.getElementById('timerNote');
+        let taskName = '';
+        let note = '';
+        let todoId = null;
+        
+        if (taskInput) {
+            taskName = taskInput.value || '';
+            todoId = taskInput.getAttribute('data-todo-id') || null;
+        }
+        if (noteInput) {
+            note = noteInput.value || '';
+        }
+        
+        // 如果输入框不存在，从保存的状态中获取（兼容从待办页面启动计时的情况）
+        if (!taskName || !todoId) {
+            const savedState = localStorage.getItem('habit_timer_state_v1');
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    if (!taskName && parsed.taskName) taskName = parsed.taskName;
+                    if (!todoId && parsed.todoId) todoId = String(parsed.todoId);
+                    if (!note && parsed.note) note = parsed.note;
+                } catch (_) {}
+            }
+        }
+        
+        // 如果仍然没有任务名称，使用默认值
+        if (!taskName) taskName = '未命名任务';
 
         // 检查计时时长是否小于2分钟（120秒）
         if (timerSeconds < 120) {
@@ -6181,9 +6590,18 @@
             timerRunning = false;
             isTimerFromPlan = false;
             updateTimerUI();
-            document.getElementById('timerTaskName').value = '';
-            document.getElementById('timerNote').value = '';
-            initTimerTime();
+            
+            // 兼容：如果输入框存在才清空
+            const taskInput = document.getElementById('timerTaskName');
+            const noteInput = document.getElementById('timerNote');
+            if (taskInput) {
+                taskInput.value = '';
+                taskInput.removeAttribute('data-todo-id');
+            }
+            if (noteInput) noteInput.value = '';
+            
+            const timeInput = document.getElementById('timerPlannedEndTime');
+            if (timeInput) initTimerTime();
             
             const idleBtns = document.getElementById('timerIdleBtns');
             const activeBtns = document.getElementById('timerActiveBtns');
@@ -6192,6 +6610,7 @@
             
             updateStickyNotif();
             updateTimerModalButtons();
+            localStorage.removeItem('habit_timer_state_v1');
             triggerAutoSave();
             
             // 提示用户
@@ -6299,10 +6718,17 @@
         timerRunning = false;
         isTimerFromPlan = false;
         updateTimerUI();
-        document.getElementById('timerTaskName').value = '';
-        document.getElementById('timerTaskName').removeAttribute('data-todo-id');
-        document.getElementById('timerNote').value = '';
-        initTimerTime();
+        
+        // 兼容：如果输入框存在才清空
+        const taskInput = document.getElementById('timerTaskName');
+        const noteInput = document.getElementById('timerNote');
+        const timeInput = document.getElementById('timerPlannedEndTime');
+        if (taskInput) {
+            taskInput.value = '';
+            taskInput.removeAttribute('data-todo-id');
+        }
+        if (noteInput) noteInput.value = '';
+        if (timeInput) initTimerTime();
         
         const idleBtns = document.getElementById('timerIdleBtns');
         const activeBtns = document.getElementById('timerActiveBtns');
@@ -6372,14 +6798,14 @@
         // 如果有更多，显示一个提示
         if (!timerFullView && timerRecords.length > limit) {
             list.insertAdjacentHTML('beforeend', 
-                `<div style="text-align:center; font-size:11px; color:var(--primary); padding:12px; cursor:pointer; font-weight:600;" onclick="toggleTimerFullView()">
-                    更多
+                `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleTimerFullView()" title="展开更多">
+                    ⬇️
                 </div>`
             );
         } else if (timerFullView && timerRecords.length > (config.timerLimit || 5)) {
             list.insertAdjacentHTML('beforeend', 
-                `<div style="text-align:center; font-size:11px; color:var(--text-sub); padding:12px; cursor:pointer;" onclick="toggleTimerFullView()">
-                    收起
+                `<div style="text-align:center; font-size:16px; padding:12px; cursor:pointer; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" onclick="toggleTimerFullView()" title="收起">
+                    ⬆️
                 </div>`
             );
         }
@@ -7578,14 +8004,66 @@
         triggerAutoSave();
     }
 
-    function applyManualAdjustment() {
-        const newTimeBank = parseFloat(document.getElementById('adjTimeBank').value);
-        const newWallet = parseFloat(document.getElementById('adjWallet').value);
-        const newDebt = parseFloat(document.getElementById('adjDebt').value);
-        const reason = document.getElementById('adjReason').value.trim();
+    function applyManualAdjustment(event) {
+        // 兜底：避免某些情况下点击被父层逻辑干扰
+        if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
 
-        if (newTimeBank === undefined || newTimeBank === null || newWallet === undefined || newWallet === null || newDebt === undefined || newDebt === null) return alert("请输入有效数值");
-        if (!reason) return alert("请输入修改原因");
+        // 关键：设置弹窗是克隆 DOM，存在同名 ID。必须从“触发按钮所在区域”向上限定范围读取。
+        const btn =
+            event && (event.currentTarget || event.target) && (event.currentTarget || event.target).closest
+                ? (event.currentTarget || event.target)
+                : null;
+        const cardRoot = btn && btn.closest ? btn.closest('.card') : null;
+        const scopeRoot =
+            (btn && btn.closest && btn.closest('#settingsModal')) ||
+            (btn && btn.closest && btn.closest('#page-settings')) ||
+            document;
+
+        const q = (id) => {
+            // 在 scope 内优先查找，避免取到另一套同名元素
+            const el = scopeRoot && scopeRoot.querySelector ? scopeRoot.querySelector('#' + id) : null;
+            return el || document.getElementById(id);
+        };
+
+        const statusEl = (cardRoot && cardRoot.querySelector) ? cardRoot.querySelector('#manualAdjustmentStatus') : q('manualAdjustmentStatus');
+        if (statusEl) statusEl.textContent = '已触发：正在校验...';
+
+        const timeBankEl = cardRoot ? cardRoot.querySelector('#adjTimeBank') : q('adjTimeBank');
+        const walletEl = cardRoot ? cardRoot.querySelector('#adjWallet') : q('adjWallet');
+        const debtEl = cardRoot ? cardRoot.querySelector('#adjDebt') : q('adjDebt');
+        const reasonEl = cardRoot ? cardRoot.querySelector('#adjReason') : q('adjReason');
+
+        const rawTimeBank = timeBankEl ? timeBankEl.value : '';
+        const rawWallet = walletEl ? walletEl.value : '';
+        const rawDebt = debtEl ? debtEl.value : '';
+        const reason = reasonEl ? reasonEl.value.trim() : '';
+
+        // 允许部分留空：留空则认为“不修改该项”，使用当前值
+        // 同时强制最小值为 0，避免负数导致显示/统计混乱
+        let newTimeBank = rawTimeBank === '' ? timeBank : parseFloat(rawTimeBank);
+        let newWallet = rawWallet === '' ? globalWallet : parseFloat(rawWallet);
+        let newDebt = rawDebt === '' ? globalDebt : parseFloat(rawDebt);
+
+        if (Number.isFinite(newTimeBank)) newTimeBank = Math.max(0, newTimeBank);
+        if (Number.isFinite(newWallet)) newWallet = Math.max(0, newWallet);
+        if (Number.isFinite(newDebt)) newDebt = Math.max(0, newDebt);
+
+        // 若用户输入了负数，回写为 0（所见即所得）
+        if (timeBankEl && rawTimeBank !== '' && Number.isFinite(newTimeBank)) timeBankEl.value = Number(newTimeBank).toFixed(1);
+        if (walletEl && rawWallet !== '' && Number.isFinite(newWallet)) walletEl.value = String(newWallet);
+        if (debtEl && rawDebt !== '' && Number.isFinite(newDebt)) debtEl.value = String(newDebt);
+
+        // 校验数值有效性（防止 NaN 静默通过）
+        if (!Number.isFinite(newTimeBank) || !Number.isFinite(newWallet) || !Number.isFinite(newDebt)) {
+            if (statusEl) statusEl.textContent = '校验失败：请输入有效数值（可留空表示不修改）。';
+            alert("请输入有效数值");
+            return;
+        }
+        if (!reason) {
+            if (statusEl) statusEl.textContent = '校验失败：请输入修改原因。';
+            alert("请输入修改原因");
+            return;
+        }
 
         const today = getLocalTodayStr();
         let changed = false;
@@ -7639,23 +8117,40 @@
             localStorage.setItem('habit_data_v15', JSON.stringify(historyData));
             updateUI();
             triggerAutoSave();
+            if (statusEl) statusEl.textContent = '已应用：调整已写入并记录到历史。';
             alert("数据已成功修正，调整已记录至历史档案。");
-            document.getElementById('adjReason').value = '';
+            if (reasonEl) reasonEl.value = '';
         } else {
+            if (statusEl) statusEl.textContent = '未应用：数值没有变化（差值 ≤ 0.01）。';
             alert("数值未发生变化，无需调整。");
         }
     }
 
     async function syncGitHub(action, isAuto) {
+        // AIGC START
+        // 防止重复执行：如果正在同步中，直接返回
+        const badge = document.getElementById('syncBadge');
+        if (badge && badge.classList.contains('status-syncing')) {
+            console.log('同步正在进行中，忽略重复调用');
+            return;
+        }
+        
+        console.log('syncGitHub被调用:', action, isAuto);
+        // AIGC START
+        // 立即更新状态并禁用按钮，确保用户看到反馈且防止重复点击
+        setSyncBadgeStatus('status-syncing', action==='push'?'上传...':'同步...');
+        // 使用requestAnimationFrame确保状态更新立即渲染，无需等待50ms
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        // AIGC END
+        
         const token = ghConfig.token;
         const repo = ghConfig.repo;
         const path = ghConfig.path || 'habit_backup.json';
         if(!token || !repo) {
+            setSyncBadgeStatus('status-error', '未配置');
             if(!isAuto) alert("请先配置 GitHub");
             return;
         }
-
-        setSyncBadgeStatus('status-syncing', action==='push'?'上传...':'同步...');
 
         try {
             const headers = { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github.v3+json" };
@@ -7665,36 +8160,64 @@
             let sha = null, cloudData = null;
 
             if(getRes.ok) {
-                const d = await getRes.json();
-                sha = d.sha || null;
-                cloudData = JSON.parse(decodeURIComponent(escape(atob((d.content || '').replace(/\n/g,"")))));
+                try {
+                    const d = await getRes.json();
+                    sha = d.sha || null;
+                    cloudData = JSON.parse(decodeURIComponent(escape(atob((d.content || '').replace(/\n/g,"")))));
+                } catch(parseError) {
+                    console.error('解析云端数据失败:', parseError);
+                    if(!isAuto) alert("❌ 云端数据格式错误，无法解析");
+                    setSyncBadgeStatus('status-error', '格式错误');
+                    return;
+                }
+            } else if(getRes.status === 404) {
+                // 文件不存在是正常的（首次同步）
+                cloudData = null;
+            } else {
+                // 其他错误（401未授权、403禁止访问等）
+                const errorText = await getRes.text();
+                console.error('GitHub API错误:', getRes.status, errorText);
+                throw new Error(`GitHub API错误: ${getRes.status} - ${errorText}`);
             }
 
             if(action === 'pull') {
+                if(!cloudData) {
+                    // 云端没有数据
+                    setSyncBadgeStatus('status-idle', '无云端数据');
+                    // 不再弹窗，状态文字"无云端数据"已足够说明
+                    return;
+                }
+
                 const localTs = parseInt(localStorage.getItem('habit_last_save') || '0');
                 const cloudTs = cloudData ? (cloudData.timestamp || 0) : 0;
 
                 let shouldApply = false;
-                if (cloudData && cloudTs > localTs) {
+                if (cloudTs > localTs) {
                     shouldApply = true;
-                } else if (cloudData && !isAuto) {
+                } else if (!isAuto) {
                     shouldApply = confirm(`云端数据时间戳(${cloudTs})并不比本地新(${localTs})。\n仍要用云端覆盖本地吗？`);
                 }
 
                 if(shouldApply) {
-                    if(cloudData.data) historyData = stripImagesFromHistory(cloudData.data);
+                    // 合并数据：保留本地和云端的新增/修改，而不是直接覆盖
+                    mergeData(cloudData, {
+                        data: historyData || [],
+                        todos: todoList || [],
+                        wishes: wishList || [],
+                        strategies: userStrategies || {},
+                        timerRecords: timerRecords || [],
+                        plannedTasks: plannedTasks || [],
+                        dailyReviews: dailyReviews || {},
+                        taskUsageCount: taskUsageCount || {}
+                    });
+                    
+                    // 配置和时间银行直接使用云端的（这些不需要合并）
                     if(cloudData.config) config = cloudData.config;
-                    if(cloudData.todos) todoList = cloudData.todos;
-                    if(cloudData.strategies) userStrategies = cloudData.strategies;
-                    if(cloudData.wishes) wishList = cloudData.wishes;
-                    if(cloudData.timerRecords) timerRecords = cloudData.timerRecords;
-                    if(cloudData.plannedTasks) plannedTasks = cloudData.plannedTasks;
-                    if(cloudData.dailyReviews) dailyReviews = cloudData.dailyReviews;
-                    if(cloudData.taskUsageCount) taskUsageCount = cloudData.taskUsageCount;
                     if(cloudData.pinnedTaskId) {
                         pinnedTaskId = cloudData.pinnedTaskId;
                         localStorage.setItem('habit_pinned_task_id', pinnedTaskId);
                     }
+                    if(cloudData.timeBank !== undefined) timeBank = cloudData.timeBank;
                     
                     // 同步计时器状态
                     const hadLocalTimer = localStorage.getItem('habit_timer_state_v1') !== null;
@@ -7712,24 +8235,25 @@
                         localStorage.removeItem('habit_timer_state_v1');
                     }
 
-                    if(cloudData.timeBank !== undefined) timeBank = cloudData.timeBank;
-
                     persistAllLocal();
                     localStorage.setItem('habit_last_save', String(cloudTs || Date.now()));
 
                     setSyncBadgeStatus('status-idle', '已更新');
-                    updateUI(); renderTodos(); checkDateChange(); applySettingsToUI(); renderStrategySettings();
-                    if (typeof renderTimerHistory === 'function') renderTimerHistory();
-                    if (typeof renderPlannedTasks === 'function') renderPlannedTasks();
-                    
-                    // 恢复计时器状态（会自动处理有/无计时器的情况）
-                    restoreTimerState();
-                    updateStickyNotif();
-
-                    if(!isAuto) alert("✅ 同步成功：已从云端同步所有数据");
+                    // AIGC START
+                    // 异步执行UI更新，避免阻塞同步状态显示
+                    requestAnimationFrame(() => {
+                        updateUI(); renderTodos(); checkDateChange(); applySettingsToUI(); renderStrategySettings();
+                        if (typeof renderTimerHistory === 'function') renderTimerHistory();
+                        if (typeof renderPlannedTasks === 'function') renderPlannedTasks();
+                        // 恢复计时器状态（会自动处理有/无计时器的情况）
+                        restoreTimerState();
+                        updateStickyNotif();
+                    });
+                    // AIGC END
+                    // 成功时不再弹窗，状态文字"已更新"已足够说明
                 } else {
                     setSyncBadgeStatus('status-idle', '已最新');
-                    if(!isAuto) alert("✅ 同步完成：本地数据已是最新");
+                    // 已是最新时不弹窗，状态文字"已最新"已足够说明
                 }
             } else {
                 // Push 操作：先检查是否有更新，避免覆盖其他设备的更改
@@ -7839,15 +8363,17 @@
                 setSyncBadgeStatus('status-idle', '已同步');
                 localStorage.setItem('habit_last_save', String(content.timestamp));
                 persistAllLocal(); // 确保本地数据已保存
-                if(!isAuto) alert("✅ 同步成功：数据已上传至云端");
+                // 成功时不再弹窗，状态文字"已同步"已足够说明
             }
         } catch(e) {
             console.error(e);
             setSyncBadgeStatus('status-error', '失败');
             if(!isAuto) alert("❌ 同步失败，请检查网络或Token");
         }
-
-        setTimeout(()=>setSyncBadgeStatus('status-idle', document.getElementById('syncText').innerText || '本地模式'), 2000);
+        // AIGC START
+        // 缩短状态显示时间，从2秒改为800ms，让用户更快看到最终状态
+        setTimeout(()=>setSyncBadgeStatus('status-idle', document.getElementById('syncText').innerText || '本地模式'), 800);
+        // AIGC END
     }
 
     async function archiveToGitHub() {
@@ -8000,6 +8526,56 @@
         updateUI();
         updateDebtModalHistoryList();
     }
+
+        // 兜底：如果浏览器/环境屏蔽 inline onclick，仍能点击生效
+        document.addEventListener('click', function (e) {
+        // AIGC START
+        // 处理同步按钮点击（作为兜底，如果onclick失效）
+        const syncBadge = e.target && e.target.closest ? e.target.closest('#syncBadge') : null;
+        if (syncBadge) {
+            // 检查是否正在同步中，避免重复点击（优先检查状态）
+            const isSyncing = syncBadge.classList.contains('status-syncing');
+            if (isSyncing) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+            // 检查是否已经有onclick处理标记，避免重复执行
+            const clickedAttr = syncBadge.getAttribute('data-click-handled');
+            if (!clickedAttr) {
+                console.log('通过事件委托捕获同步按钮点击（onclick可能失效）');
+                // 立即设置标记，防止onclick和事件委托同时执行
+                syncBadge.setAttribute('data-click-handled', 'true');
+                setTimeout(() => syncBadge.removeAttribute('data-click-handled'), 1000);
+                // 不在这里提前改成同步中，直接调用 syncGitHub，
+                // 让 syncGitHub 自己负责状态切换，避免被它的“正在同步中”判断直接 return 掉
+                syncGitHub('pull', false);
+            }
+            return;
+        }
+        // AIGC END
+        
+        const btn = e.target && e.target.closest ? e.target.closest('#btnApplyManualAdjustment') : null;
+        if (btn) {
+            // 明确的可视反馈：按钮变色 + 状态文案
+            btn.style.opacity = '0.8';
+            btn.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                btn.style.opacity = '';
+                btn.style.transform = '';
+            }, 120);
+
+            const statusEl = document.getElementById('manualAdjustmentStatus');
+            if (statusEl) statusEl.textContent = '已触发点击事件（监听器），正在执行 applyManualAdjustment...';
+
+            // 用一个“伪事件”确保 currentTarget/target 可用（浏览器原生 event.currentTarget 通常不可写）
+            applyManualAdjustment({
+                currentTarget: btn,
+                target: btn,
+                stopPropagation: () => {}
+            });
+        }
+    }, true);
 
     init();
 </script>
