@@ -1695,18 +1695,61 @@
             historyData = localDataArray;
         }
         
-        // 合并待办事项：保留所有唯一待办（按id去重）
+        // 合并待办事项：按 id 合并，并尽量保留“最新修改”的状态
         if (cloudData.todos && Array.isArray(cloudData.todos)) {
             const localTodosArray = localData.todos || [];
-            const localTodoIds = new Set(localTodosArray.map(t => t && t.id ? t.id : null).filter(id => id !== null));
             
-            cloudData.todos.forEach(todo => {
-                if (todo && todo.id && !localTodoIds.has(todo.id)) {
-                    localTodosArray.push(todo);
+            // 统一计算每个待办的“最近修改时间”
+            const getTodoTimestamp = (todo) => {
+                if (!todo) return 0;
+                const ts = Number(todo.updatedAt || todo.endedAt || todo.archivedAt || 0);
+                return Number.isFinite(ts) && ts > 0 ? ts : 0;
+            };
+            
+            // 合并同一个 id 的待办时的决策函数
+            const pickNewerTodo = (localTodo, cloudTodo) => {
+                if (!localTodo) return cloudTodo;
+                if (!cloudTodo) return localTodo;
+                
+                const localTs = getTodoTimestamp(localTodo);
+                const cloudTs = getTodoTimestamp(cloudTodo);
+                
+                // 如果两边都有有效时间戳，则选时间戳更大的（更新更晚的）
+                if (localTs !== 0 || cloudTs !== 0) {
+                    return cloudTs > localTs ? cloudTodo : localTodo;
+                }
+                
+                // 没有时间戳（旧数据）：如果状态不同，优先保留“非 pending”的版本，
+                // 避免一个已经完成/过期的任务被另一台设备的未完成状态覆盖
+                if (localTodo.status !== cloudTodo.status) {
+                    const scoreStatus = (t) => (t && t.status && t.status !== 'pending') ? 1 : 0;
+                    return scoreStatus(cloudTodo) > scoreStatus(localTodo) ? cloudTodo : localTodo;
+                }
+                
+                // 状态相同或无法区分时，保留本地版本
+                return localTodo;
+            };
+            
+            const todoMap = new Map();
+            
+            // 先放入本地的待办
+            localTodosArray.forEach(t => {
+                if (t && t.id) {
+                    todoMap.set(t.id, t);
                 }
             });
             
-            todoList = localTodosArray;
+            // 使用合并策略叠加云端的待办
+            cloudData.todos.forEach(todo => {
+                if (todo && todo.id) {
+                    const existing = todoMap.get(todo.id);
+                    const merged = pickNewerTodo(existing, todo);
+                    todoMap.set(todo.id, merged);
+                }
+            });
+            
+            // 将 Map 转回数组
+            todoList = Array.from(todoMap.values());
         }
         
         // 合并愿望清单：保留所有唯一愿望（按名称去重）
@@ -4085,6 +4128,8 @@
                 t.reward = reward;
                 t.penalty = penalty;
                 t.status = 'pending';
+                // 标记为最近一次修改，方便多设备合并时判断“谁更新更晚”
+                t.updatedAt = Date.now();
                 delete t.archived; // 编辑后取消归档状态
                 delete t.archivedAt;
                 delete t.endedAt;
@@ -4092,7 +4137,20 @@
             }
         } else {
             const newId = 't_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-            todoList.push({ id: newId, date, title, note, time, type, importance, reward, penalty, status: 'pending' });
+            todoList.push({ 
+                id: newId, 
+                date, 
+                title, 
+                note, 
+                time, 
+                type, 
+                importance, 
+                reward, 
+                penalty, 
+                status: 'pending',
+                // 新建任务记录创建时间
+                updatedAt: Date.now()
+            });
         }
 
         renderTodos();
@@ -4200,6 +4258,8 @@
             t.archivedAt = Date.now(); // 记录归档时间戳
             t.endedAt = t.archivedAt; // 进入“已结束/已过期”的时间戳（用于排序）
             t.endedAtV = 1; // 标记：本版本产生的“真实入列时间”
+            // 记录最近一次修改时间
+            t.updatedAt = Date.now();
             renderTodos();
             triggerAutoSave();
         }
@@ -4232,6 +4292,8 @@
         const t = todoList.find(x => String(x.id) === String(id));
         if(!t) return;
         t.status = result;
+        // 记录最近一次状态变更时间，供多设备合并使用
+        t.updatedAt = Date.now();
 
         let fund, theme, displayTitle, recordType;
         if (t.type === 'do' || t.type === 'other') {
@@ -4288,8 +4350,9 @@
             }, false);
         }
         
-        // 恢复待办状态为pending
+        // 恢复待办状态为pending，并记录更新时间
         t.status = 'pending';
+        t.updatedAt = Date.now();
         delete t.finishRecordId;
         
         // 更新UI和统计数据
@@ -4317,6 +4380,9 @@
         if (t.date < todayStr) {
             t.date = todayStr;
         }
+        
+        // 标记最近一次修改时间
+        t.updatedAt = Date.now();
         
         // 更新UI
         renderTodos();
@@ -4348,6 +4414,7 @@
                     t.finishRecordId = recordId;
                     t.endedAt = Date.now(); // 用“入列时刻”排序（符合你的需求）
                     t.endedAtV = 1; // 标记：本版本产生的“真实入列时间”
+                    t.updatedAt = Date.now(); // 记录最近一次状态变更时间
                     changed = true;
                 } else {
                     t.status = 'expired_fail';
@@ -4356,6 +4423,7 @@
                     t.finishRecordId = recordId;
                     t.endedAt = Date.now(); // 用“入列时刻”排序（符合你的需求）
                     t.endedAtV = 1; // 标记：本版本产生的“真实入列时间”
+                    t.updatedAt = Date.now(); // 记录最近一次状态变更时间
                     changed = true;
                 }
             }
