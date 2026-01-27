@@ -1622,9 +1622,23 @@
                 updateTimerUI();
                 updateStickyNotif();
                 
+                // 获取开始时间戳用于准确计算
+                const savedState = localStorage.getItem('habit_timer_state_v1');
+                let startTimestamp = Date.now();
+                if (savedState) {
+                    try {
+                        const parsed = JSON.parse(savedState);
+                        if (parsed.startTimestamp) {
+                            startTimestamp = parsed.startTimestamp;
+                        }
+                    } catch (e) {}
+                }
+                
                 timerInterval = setInterval(() => {
-                    if (!timerPaused) {
-                        timerSeconds++;
+                    if (!timerPaused && timerRunning) {
+                        // 基于时间戳计算已过去的秒数，避免锁屏导致的偏差
+                        const elapsedMs = Date.now() - startTimestamp;
+                        timerSeconds = Math.floor(elapsedMs / 1000);
                         updateTimerUI();
                         saveTimerState(); // 每秒保存一次状态到本地
                     }
@@ -2287,6 +2301,27 @@
 
         // 初始同步
         if(ghConfig.token && ghConfig.repo) syncGitHub('pull', true);
+        
+        // 监听页面可见性变化，处理锁屏/解锁等情况
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && timerRunning && !timerPaused) {
+                // 页面重新可见时，基于时间戳校正计时器时间，避免锁屏导致的偏差
+                const savedState = localStorage.getItem('habit_timer_state_v1');
+                if (savedState) {
+                    try {
+                        const parsed = JSON.parse(savedState);
+                        if (parsed.startTimestamp) {
+                            const elapsedMs = Date.now() - parsed.startTimestamp;
+                            timerSeconds = Math.floor(elapsedMs / 1000);
+                            updateTimerUI();
+                            saveTimerState();
+                        }
+                    } catch (e) {
+                        console.error('校正计时器时间失败:', e);
+                    }
+                }
+            }
+        });
         
         // 每2分钟自动同步一次，检测其他设备的变化
         if(ghConfig.token && ghConfig.repo) {
@@ -5113,10 +5148,15 @@
                 debt += absFund;
             } else if (i.theme === 'theme-pay' && !isTodoFail) {
                 // 支付/清零：减少债务（注意：Todo 破戒也用了 theme-pay，但此处已用 isTodoFail 排除）
+                // 使用 absFund 确保支付金额为正数，减少债务
                 debt -= absFund;
             } 
         });
-        globalWallet = Math.max(0, wallet); globalDebt = Math.max(0, debt);
+        // 确保钱包和债务不为负数
+        // 如果 debt 计算后为负数（即实际债务小于0），说明支付总额超过了债务总额，此时应显示为0
+        // 使用 Math.max(0, debt) 确保实际债务为负时也设置为0，保证显示的一致性
+        globalWallet = Math.max(0, wallet); 
+        globalDebt = Math.max(0, debt);  // 实际债务为负时也设置为0
         
         // 更新主页面和所有modal中的余额显示
         const walletDisplay = document.getElementById('walletDisplay');
@@ -6454,6 +6494,11 @@
         timerPaused = false;
         if (!fromPlan) isTimerFromPlan = false; // 如果不是从计划开始，重置标志
         
+        // 如果是从0开始，重置timerSeconds；如果是从暂停恢复，保持当前值
+        if (timerSeconds === 0) {
+            timerSeconds = 0;
+        }
+        
         const idleBtns = document.getElementById('timerIdleBtns');
         const activeBtns = document.getElementById('timerActiveBtns');
         if (idleBtns) idleBtns.style.display = 'none';
@@ -6461,12 +6506,33 @@
         
         updateTimerModalButtons(); // 更新弹出窗口按钮状态
         updateStickyNotif(); // 开启时显示置顶通知
-        saveTimerState(); // 保存计时器状态
+        saveTimerState(); // 保存计时器状态（会设置startTimestamp）
         triggerAutoSave(); // 同步到云端
 
+        // 获取开始时间戳用于准确计算
+        const savedState = localStorage.getItem('habit_timer_state_v1');
+        let startTimestamp = Date.now();
+        if (savedState) {
+            try {
+                const parsed = JSON.parse(savedState);
+                if (parsed.startTimestamp) {
+                    startTimestamp = parsed.startTimestamp;
+                } else {
+                    // 如果没有startTimestamp，根据当前timerSeconds计算
+                    startTimestamp = Date.now() - (timerSeconds * 1000);
+                }
+            } catch (e) {
+                startTimestamp = Date.now() - (timerSeconds * 1000);
+            }
+        } else {
+            startTimestamp = Date.now() - (timerSeconds * 1000);
+        }
+
         timerInterval = setInterval(() => {
-            if (!timerPaused) {
-                timerSeconds++;
+            if (!timerPaused && timerRunning) {
+                // 基于时间戳计算已过去的秒数，避免锁屏导致的偏差
+                const elapsedMs = Date.now() - startTimestamp;
+                timerSeconds = Math.floor(elapsedMs / 1000);
                 updateTimerUI();
                 saveTimerState(); // 每秒保存一次状态到本地
             }
