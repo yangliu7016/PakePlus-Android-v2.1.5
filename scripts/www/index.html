@@ -1424,6 +1424,19 @@
     let wishList = safeParse('habit_wishes_v1', []);
     let deletedTodoIds = safeParse('habit_deleted_todo_ids_v1', []);
     let todoList = safeParse('habit_todos_v1', []);
+    // 页面加载时，强制将已结束项目的备注设为折叠状态
+    (function() {
+        try {
+            const todayStr = getLocalTodayStr();
+            todoList.forEach(t => {
+                const isExpired = t.archived || t.status.startsWith('expired_') || (t.date < todayStr);
+                if (isExpired && t.noteExpanded) {
+                    t.noteExpanded = false;
+                }
+            });
+        } catch(e) { console.error('Auto collapse expired notes error:', e); }
+    })();
+
     let userStrategies = safeParse('habit_strategies_v1', { study: ["⚡ 番茄钟"], sleep: ["📵 远离屏幕"], wake: ["⏰ 闹钟放远"] });
     let timeBank = parseFloat(localStorage.getItem('habit_time_bank_v1'));
     if (isNaN(timeBank) || timeBank < 0) timeBank = 0;
@@ -2045,8 +2058,8 @@
                     const fixedTime = new Date(now);
                     fixedTime.setHours(hours, minutes, 0, 0);
                     
-                    // 如果有时间段叠加，先加上天数
-                    if (chipConfig.daysOffset && chipConfig.daysOffset > 0) {
+                    // 如果有时间段叠加（包括强制今天daysOffset=0的情况），先加上天数
+                    if (typeof chipConfig.daysOffset !== 'undefined') {
                         fixedTime.setDate(fixedTime.getDate() + chipConfig.daysOffset);
                     } else {
                         // 如果没有叠加，检查固定时间是否跨天
@@ -2741,12 +2754,12 @@
         
         if (isReview) {
             container.innerHTML = `
-                <button class="btn-mini" style="background:var(--info); color:#fff;" onclick="toggleCheckinModalHistoryReview()">📜 历史</button>
-                <button id="checkinModalBtnSaveReview" class="btn-mini" style="background:var(--success); color:#fff;" onclick="saveCheckinModalDailyReview(true)">💾 保存</button>
+                <button class="btn-mini" style="background:var(--info); color:#fff;" onclick="toggleCheckinModalHistoryReview()">📜</button>
+                <button id="checkinModalBtnSaveReview" class="btn-mini" style="background:var(--success); color:#fff;" onclick="saveCheckinModalDailyReview(true)">💾</button>
             `;
         } else {
             container.innerHTML = `
-                <button class="btn-mini" style="background:var(--info); color:#fff;" onclick="toggleCheckinModalHistoryCheckin()">📜 历史</button>
+                <button class="btn-mini" style="background:var(--info); color:#fff;" onclick="toggleCheckinModalHistoryCheckin()">📜</button>
             `;
         }
     }
@@ -4713,6 +4726,7 @@
         const t = todoList.find(x => String(x.id) === String(id));
         if (t) {
             t.archived = true;
+            t.noteExpanded = false;
             t.archivedAt = Date.now(); // 记录归档时间戳
             t.endedAt = t.archivedAt; // 进入“已结束/已过期”的时间戳（用于排序）
             t.endedAtV = 1; // 标记：本版本产生的“真实入列时间”
@@ -4844,7 +4858,7 @@
 
     function restoreTodo(id) {
         const t = todoList.find(x => String(x.id) === String(id));
-        if (!t || (!t.status.startsWith('expired_') && !(t.date < getLocalTodayStr()))) return;
+        if (!t || (!t.status.startsWith('expired_') && !(t.date < getLocalTodayStr()) && !t.archived)) return;
         
         const prevStatus = t.status;
         // 恢复状态为pending
@@ -4904,6 +4918,7 @@
             if (isOverdue) {
                 if (t.type === 'dont') {
                     t.status = 'expired_success';
+                    t.noteExpanded = false;
                     const recordId = Date.now();
                     addWallet(Number(t.reward)||0);
                     saveRecord({ fund: t.reward, title: t.title, theme: 'theme-success', details: { type: 'Todo结算', result: 'expired_success', note: '坚持达成', recordType: 'todo-success', todoId: String(t.id) } }, false);
@@ -4914,6 +4929,7 @@
                     changed = true;
                 } else {
                     t.status = 'expired_fail';
+                    t.noteExpanded = false;
                     const recordId = Date.now();
                     addDebt(Number(t.penalty)||0);
                     saveRecord({ fund: -t.penalty, title: t.title, theme: 'theme-pay', details: { type: 'Todo结算', result: 'expired_fail', note: '超时未完成', recordType: 'todo-fail', todoId: String(t.id) } }, false);
@@ -8235,6 +8251,7 @@
                         type: 'select',
                         value: '0',
                         options: [
+                            { value: 'force_today', label: '今天' },
                             { value: '0', label: '无（自动计算）' },
                             { value: '1', label: '1天后' },
                             { value: '3', label: '3天后' },
@@ -8271,7 +8288,8 @@
                             }
                             
                             // 处理时间段叠加
-                            const daysOffset = parseInt(values.chipDaysOffset || '0', 10) || 0;
+                            const rawOffset = values.chipDaysOffset;
+                            const daysOffset = parseInt(rawOffset || '0', 10) || 0;
                             
                             // 检查时间是否已过今天，如果已过则提示会自动设置为明天
                             const [hours, minutes] = time.split(':').map(Number);
@@ -8279,8 +8297,10 @@
                             const fixedTime = new Date(now);
                             fixedTime.setHours(hours, minutes, 0, 0);
                             
-                            // 如果有时间段叠加，先加上天数
-                            if (daysOffset > 0) {
+                            if (rawOffset === 'force_today') {
+                                // 强制今天，不进行日期偏移
+                            } else if (daysOffset > 0) {
+                                // 如果有时间段叠加，先加上天数
                                 fixedTime.setDate(fixedTime.getDate() + daysOffset);
                             } else {
                                 // 如果没有叠加，检查时间是否已过今天
@@ -8291,7 +8311,9 @@
                             
                             // 构建配置对象
                             const chipConfig = { type: 'fixed', label: label, time: time };
-                            if (daysOffset > 0) {
+                            if (rawOffset === 'force_today') {
+                                chipConfig.daysOffset = 0;
+                            } else if (daysOffset > 0) {
                                 chipConfig.daysOffset = daysOffset;
                             }
                             
