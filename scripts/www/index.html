@@ -409,6 +409,7 @@
         .chips-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
         .chip { font-size: 12px; padding: 6px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; color: var(--text-sub); transition: all 0.2s; }
         .chip:hover { background: var(--input-bg); border-color: var(--primary); color: var(--primary); }
+        .chip.active { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); font-weight: 600; }
         .chip-removable { padding-right: 8px; display:inline-flex; align-items:center; }
         .chip-removable::after { content:'×'; font-weight:bold; margin-left:6px; font-size:14px; opacity:0.5; }
 
@@ -889,6 +890,23 @@
         </div>
 
         <div class="card">
+            <div class="card-title">晨间打卡复盘设置</div>
+            <div class="input-group">
+                <label class="input-label">复盘标签栏目标题</label>
+                <input type="text" id="settingReviewTagTitle" placeholder="例如：感悟、今日标签...">
+            </div>
+            <div class="input-group">
+                <label class="input-label">复盘标签管理</label>
+                <div class="chips-container" id="settingReviewTagsList"></div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn-calc btn-secondary" style="flex:1; margin-top:0;" onclick="addReviewTagSetting()">+ 添加标签</button>
+                <button class="btn-calc btn-secondary" style="flex:1; margin-top:0;" onclick="resetReviewTags()">🔄 恢复默认</button>
+            </div>
+            <button class="btn-calc" style="margin-top:12px;" onclick="saveReviewSettings()">💾 保存复盘设置</button>
+        </div>
+
+        <div class="card">
             <div class="card-title">数据调节</div>
             <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">修改数值，将记录至历史</div>
             <div class="row">
@@ -1071,14 +1089,22 @@
     <div id="checkinModal" class="custom-modal" onclick="if(event.target.id === 'checkinModal') closeCheckinModal()">
         <div class="modal-content" style="max-width: 450px; max-height: 90vh; overflow-y: auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; position:sticky; top:0; background:var(--bg-card); z-index:10; padding-bottom:12px; border-bottom:1px solid var(--border);">
-                <div class="modal-title" id="checkinModalTitle" style="color:var(--primary); margin:0;">✨ 晨间打卡</div>
-                <div class="btn-action" onclick="closeCheckinModal()" style="width:32px; height:32px; font-size:18px;">✕</div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="modal-title" id="checkinModalTitle" style="color:var(--primary); margin:0;">✨ 晨间打卡</div>
+                    <span onclick="toggleCheckinMode()" style="cursor:pointer; font-size:12px; color:var(--text-sub); border:1px solid var(--border); padding:1px 5px; border-radius:4px;" title="手动切换模式">⇄</span>
+                    <span id="checkinModalDayTypeBadge" style="display:none;background:var(--info);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;">周末</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div id="checkinModalHeaderButtons">
+                        <!-- 动态显示的按钮 -->
+                    </div>
+                    <div class="btn-action" onclick="closeCheckinModal()" style="width:32px; height:32px; font-size:18px;">✕</div>
+                </div>
             </div>
             
             <!-- 打卡表单区域 -->
             <div id="checkinModalCheckinArea">
                 <div class="card" style="box-shadow: none; border: none; padding: 0;">
-                    <div class="card-title">打卡 <span id="checkinModalDayTypeBadge" style="display:none;background:var(--info);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;">周末</span></div>
                     <div class="input-group">
                         <label class="input-label">日期</label>
                         <input type="date" id="checkinModalDateInput" onchange="checkCheckinModalDateChange(); calculateCheckinModalPenalty();">
@@ -1114,6 +1140,11 @@
                         </div>
                         <button class="btn-calc" onclick="submitCheckinModal()" style="margin-top:12px;">✓ 确认提交</button>
                     </div>
+
+                    <!-- 历史打卡容器 -->
+                    <div id="checkinModalHistoryCheckinArea" style="display:none; margin-top:10px; border-top:1px solid var(--border); padding-top:10px; max-height:300px; overflow-y:auto;">
+                        <div id="checkinModalHistoryCheckinList"></div>
+                    </div>
                 </div>
 
                 <div id="checkinModalAnalysisCard" class="card" style="display:none; text-align:center; margin-top:16px;"></div>
@@ -1123,13 +1154,6 @@
             <!-- 复盘区域 -->
             <div id="checkinModalReviewArea" style="display:none;">
                 <div class="card" style="box-shadow: none; border: none; padding: 0;">
-                    <div class="card-title">
-                        <span>复盘</span>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn-mini" style="background:var(--info); color:#fff;" onclick="toggleCheckinModalHistoryReview()">📜 历史</button>
-                            <button id="checkinModalBtnSaveReview" class="btn-mini" style="background:var(--success); color:#fff;" onclick="saveCheckinModalDailyReview(true)">💾 保存</button>
-                        </div>
-                    </div>
                     
                     <div id="checkinModalReviewInputArea">
                         <div class="input-group">
@@ -1141,7 +1165,7 @@
                             <textarea id="checkinModalReviewImprove" placeholder="改进..." rows="2"></textarea>
                         </div>
                         <div class="input-group">
-                            <label class="input-label">感悟</label>
+                            <div id="checkinModalReviewTags" class="chips-container" style="margin-bottom:8px;"></div>
                             <textarea id="checkinModalReviewInsight" placeholder="感悟..." rows="2"></textarea>
                         </div>
                     </div>
@@ -1200,6 +1224,8 @@
         timerLimit: 5,
         historyLimit: 5,
         quickTasks: ['📚 阅读', '💻 编程', '✍️ 写作', '🏃 运动', '🎸 练习', '🧹 家务'],
+        reviewTags: ['🛍️ 购物', '💊 健康', '📚 学习', '🏃 运动'],
+        reviewTagTitle: '感悟',
         penalties: { wakeS: 2, wakeL: 5, sleepS: 2, sleepL: 5, studyS: 5, studyL: 10 }, 
         weekend: [0, 6],
         todoTimeChips: [], // 默认为空数组，使用内置默认快选
@@ -1387,7 +1413,16 @@
         config.todoTimeChips = DEFAULT_CONFIG.todoTimeChips;
     }
     
+    // 确保配置中包含复盘标签（向后兼容）
+    if (!config.reviewTags) {
+        config.reviewTags = DEFAULT_CONFIG.reviewTags;
+    }
+    if (!config.reviewTagTitle) {
+        config.reviewTagTitle = DEFAULT_CONFIG.reviewTagTitle;
+    }
+    
     let wishList = safeParse('habit_wishes_v1', []);
+    let deletedTodoIds = safeParse('habit_deleted_todo_ids_v1', []);
     let todoList = safeParse('habit_todos_v1', []);
     let userStrategies = safeParse('habit_strategies_v1', { study: ["⚡ 番茄钟"], sleep: ["📵 远离屏幕"], wake: ["⏰ 闹钟放远"] });
     let timeBank = parseFloat(localStorage.getItem('habit_time_bank_v1'));
@@ -1684,6 +1719,17 @@
     function mergeData(cloudData, localData) {
         if (!cloudData || !localData) return;
         
+        // 1. 先合并删除记录，以便后续过滤
+        if (cloudData.deletedTodoIds && Array.isArray(cloudData.deletedTodoIds)) {
+            if (typeof deletedTodoIds === 'undefined') deletedTodoIds = [];
+            const localDeletedSet = new Set(deletedTodoIds);
+            cloudData.deletedTodoIds.forEach(id => localDeletedSet.add(String(id)));
+            deletedTodoIds = Array.from(localDeletedSet);
+            // 限制大小
+            if (deletedTodoIds.length > 500) deletedTodoIds = deletedTodoIds.slice(-500);
+            localStorage.setItem('habit_deleted_todo_ids_v1', JSON.stringify(deletedTodoIds));
+        }
+
         // 合并历史记录：保留所有唯一记录（按id去重）
         if (cloudData.data && Array.isArray(cloudData.data)) {
             const localDataArray = localData.data || [];
@@ -1762,6 +1808,12 @@
             
             // 将 Map 转回数组
             todoList = Array.from(todoMap.values());
+            
+            // 过滤掉已删除的待办
+            if (typeof deletedTodoIds !== 'undefined' && deletedTodoIds.length > 0) {
+                const deletedSet = new Set(deletedTodoIds);
+                todoList = todoList.filter(t => !deletedSet.has(String(t.id)));
+            }
         }
         
         // 合并愿望清单：保留所有唯一愿望（按名称去重）
@@ -2634,6 +2686,116 @@
         if (modal) modal.classList.remove('show');
     }
 
+    // 初始化打卡表单数据
+    function initCheckinModalForm() {
+        const today = getLocalTodayStr();
+        const dateInput = document.getElementById('checkinModalDateInput');
+        if (dateInput) {
+            dateInput.value = today;
+            if (typeof checkCheckinModalDateChange === 'function') {
+                checkCheckinModalDateChange();
+            }
+            
+            // 尝试恢复草稿数据
+            const savedDraft = localStorage.getItem('habit_checkin_draft_v1');
+            let draftRestored = false;
+            
+            if (savedDraft) {
+                try {
+                    const draft = JSON.parse(savedDraft);
+                    if (draft.date === today) {
+                        if (draft.sleep) document.getElementById('checkinModalSleepInput').value = draft.sleep;
+                        if (draft.wake) document.getElementById('checkinModalWakeInput').value = draft.wake;
+                        if (draft.study) document.getElementById('checkinModalStudyInput').value = draft.study;
+                        if (draft.penalty) document.getElementById('checkinModalPenaltyAmount').value = draft.penalty;
+                        if (draft.reason) document.getElementById('checkinModalPenaltyReason').value = draft.reason;
+                        draftRestored = true;
+                        console.log('已恢复打卡草稿');
+                    }
+                } catch(e) { console.error('草稿恢复失败', e); }
+            }
+            
+            if (!draftRestored) {
+                const studyInput = document.getElementById('checkinModalStudyInput');
+                if (studyInput && !studyInput.value) { 
+                    const yesterdayStr = getYesterdayStr();
+                    const yesterdayStudyTime = getStudyTimeForDate(yesterdayStr);
+                    if (yesterdayStudyTime > 0) {
+                        studyInput.value = yesterdayStudyTime.toFixed(1);
+                    }
+                }
+            }
+            
+            setTimeout(() => {
+                if (typeof calculateCheckinModalPenalty === 'function') {
+                    calculateCheckinModalPenalty();
+                }
+            }, 200);
+        }
+    }
+
+    // 手动切换打卡/复盘模式
+    function updateCheckinModalHeaderButtons(isReview) {
+        const container = document.getElementById('checkinModalHeaderButtons');
+        if (!container) return;
+        
+        if (isReview) {
+            container.innerHTML = `
+                <button class="btn-mini" style="background:var(--info); color:#fff;" onclick="toggleCheckinModalHistoryReview()">📜 历史</button>
+                <button id="checkinModalBtnSaveReview" class="btn-mini" style="background:var(--success); color:#fff;" onclick="saveCheckinModalDailyReview(true)">💾 保存</button>
+            `;
+        } else {
+            container.innerHTML = `
+                <button class="btn-mini" style="background:var(--info); color:#fff;" onclick="toggleCheckinModalHistoryCheckin()">📜 历史</button>
+            `;
+        }
+    }
+
+    function toggleCheckinMode() {
+        const checkinArea = document.getElementById('checkinModalCheckinArea');
+        const reviewArea = document.getElementById('checkinModalReviewArea');
+        const modalTitle = document.getElementById('checkinModalTitle');
+
+        if (checkinArea && reviewArea && modalTitle) {
+            // 重置历史视图状态
+            isCheckinModalHistoryCheckinOpen = false;
+            isCheckinModalReviewHistoryOpen = false;
+            
+            // 确保历史区域隐藏，输入区域显示
+            const historyCheckinArea = document.getElementById('checkinModalHistoryCheckinArea');
+            if (historyCheckinArea) historyCheckinArea.style.display = 'none';
+            // 恢复打卡卡片子元素显示 (简单重置，依赖initCheckinModalForm可能不够，因为toggleCheckinModalHistoryCheckin修改了display)
+            // 这里重新获取并恢复display比较安全
+            const checkinCard = document.querySelector('#checkinModalCheckinArea .card');
+            if (checkinCard) {
+                Array.from(checkinCard.children).forEach(child => {
+                    if (child.id !== 'checkinModalHistoryCheckinArea') child.style.display = '';
+                });
+            }
+
+            const historyReviewArea = document.getElementById('checkinModalReviewHistoryArea');
+            const reviewInputArea = document.getElementById('checkinModalReviewInputArea');
+            if (historyReviewArea) historyReviewArea.style.display = 'none';
+            if (reviewInputArea) reviewInputArea.style.display = 'block';
+
+            if (checkinArea.style.display !== 'none') {
+                // 切换到复盘
+                checkinArea.style.display = 'none';
+                reviewArea.style.display = 'block';
+                modalTitle.innerText = '📝 每日复盘';
+                updateCheckinModalHeaderButtons(true);
+                loadCheckinModalReview(getLocalTodayStr());
+            } else {
+                // 切换到打卡
+                checkinArea.style.display = 'block';
+                reviewArea.style.display = 'none';
+                modalTitle.innerText = '✨ 晨间打卡';
+                updateCheckinModalHeaderButtons(false);
+                initCheckinModalForm();
+            }
+        }
+    }
+
     // 晨间打卡弹出窗口函数
     function showCheckinModal() {
         const modal = document.getElementById('checkinModal');
@@ -2656,6 +2818,7 @@
                 if (checkinArea) checkinArea.style.display = 'none';
                 if (reviewArea) reviewArea.style.display = 'block';
                 if (modalTitle) modalTitle.innerText = '📝 每日复盘';
+                updateCheckinModalHeaderButtons(true);
                 
                 // 加载当天的复盘内容
                 loadCheckinModalReview(today);
@@ -2664,54 +2827,9 @@
                 if (checkinArea) checkinArea.style.display = 'block';
                 if (reviewArea) reviewArea.style.display = 'none';
                 if (modalTitle) modalTitle.innerText = '✨ 晨间打卡';
+                updateCheckinModalHeaderButtons(false);
                 
-                // 初始化打卡表单
-                const dateInput = document.getElementById('checkinModalDateInput');
-                if (dateInput) {
-                    dateInput.value = today;
-                    if (typeof checkCheckinModalDateChange === 'function') {
-                        checkCheckinModalDateChange();
-                    }
-                    
-                    // 尝试恢复草稿数据
-                    const savedDraft = localStorage.getItem('habit_checkin_draft_v1');
-                    let draftRestored = false;
-                    
-                    if (savedDraft) {
-                        try {
-                            const draft = JSON.parse(savedDraft);
-                            // 只有当草稿日期也是今天时才恢复，避免恢复过期数据
-                            if (draft.date === today) {
-                                if (draft.sleep) document.getElementById('checkinModalSleepInput').value = draft.sleep;
-                                if (draft.wake) document.getElementById('checkinModalWakeInput').value = draft.wake;
-                                if (draft.study) document.getElementById('checkinModalStudyInput').value = draft.study;
-                                if (draft.penalty) document.getElementById('checkinModalPenaltyAmount').value = draft.penalty;
-                                if (draft.reason) document.getElementById('checkinModalPenaltyReason').value = draft.reason;
-                                draftRestored = true;
-                                console.log('已恢复打卡草稿');
-                            }
-                        } catch(e) { console.error('草稿恢复失败', e); }
-                    }
-                    
-                    if (!draftRestored) {
-                        // 自动填入昨天的学习时长
-                        const studyInput = document.getElementById('checkinModalStudyInput');
-                        if (studyInput) {
-                            const yesterdayStr = getYesterdayStr();
-                            const yesterdayStudyTime = getStudyTimeForDate(yesterdayStr);
-                            if (yesterdayStudyTime > 0) {
-                                studyInput.value = yesterdayStudyTime.toFixed(1);
-                            }
-                        }
-                    }
-                    
-                    // 初始化惩罚金计算（延迟执行以确保DOM已更新）
-                    setTimeout(() => {
-                        if (typeof calculateCheckinModalPenalty === 'function') {
-                            calculateCheckinModalPenalty();
-                        }
-                    }, 200);
-                }
+                initCheckinModalForm();
             }
         } catch (e) {
             console.error('showCheckinModal error:', e);
@@ -2741,11 +2859,52 @@
             
             if (greatInput) greatInput.value = review.great || '';
             if (improveInput) improveInput.value = review.improve || '';
-            if (insightInput) insightInput.value = review.insight || '';
+            if (insightInput) {
+                insightInput.value = review.insight || '';
+                // 设置初始 placeholder
+                const defaultTitle = review.title || config.reviewTagTitle || '感悟';
+                insightInput.placeholder = defaultTitle + '...';
+            }
+            
+            const currentTitle = review.title || '';
+            
+            const tagsContainer = document.getElementById('checkinModalReviewTags');
+            if (tagsContainer) {
+                if (config.reviewTags && config.reviewTags.length > 0) {
+                    tagsContainer.style.display = 'flex';
+                    tagsContainer.innerHTML = config.reviewTags.map(tag => {
+                        const activeClass = tag === currentTitle ? 'active' : '';
+                        return `<div class="chip ${activeClass}" onclick="setReviewTitle(this, '${tag}')">${tag}</div>`;
+                    }).join('');
+                } else {
+                    tagsContainer.style.display = 'none';
+                }
+            }
         } catch (e) {
             console.error('loadCheckinModalReview error:', e);
         }
     }
+
+    function setReviewTitle(el, tag) {
+        // 不再修改label内容，只处理样式选中
+        const tagsContainer = document.getElementById('checkinModalReviewTags');
+        if (tagsContainer) {
+            const chips = tagsContainer.querySelectorAll('.chip');
+            chips.forEach(c => c.classList.remove('active'));
+        }
+        if (el) el.classList.add('active');
+        // 将选中的tag暂存在tagsContainer的dataset中，以便保存时获取
+        if (tagsContainer) tagsContainer.dataset.selectedTag = tag;
+        
+        // 更新输入框的 placeholder
+        const insightInput = document.getElementById('checkinModalReviewInsight');
+        if (insightInput) {
+            insightInput.placeholder = tag + '...';
+        }
+    }
+    
+    // 原 appendReviewTag 已废弃，替换为 setReviewTitle
+    // function appendReviewTag(tag) { ... }
 
     // 保存modal中的复盘
     function saveCheckinModalDailyReview(showMsg = false) {
@@ -2755,10 +2914,38 @@
             const improve = document.getElementById('checkinModalReviewImprove').value.trim();
             const insight = document.getElementById('checkinModalReviewInsight').value.trim();
             
+            // 获取选中的标签
+            const tagsContainer = document.getElementById('checkinModalReviewTags');
+            let title = '';
+            if (tagsContainer) {
+                // 优先从 dataset 获取
+                if (tagsContainer.dataset.selectedTag) {
+                    title = tagsContainer.dataset.selectedTag;
+                } else {
+                    // 尝试从 active class 获取
+                    const activeChip = tagsContainer.querySelector('.chip.active');
+                    if (activeChip) title = activeChip.innerText.trim();
+                }
+            }
+            
+            // 如果没有选中标签，保留原来的title（如果是编辑旧记录），或者为空（不强制默认，或者留空表示未分类）
+            // 如果是新记录且未选，可能需要一个默认值？
+            // 用户逻辑：如果有选中的div效果即可。
+            // 之前的逻辑是 title = label.innerText，默认是 '感悟'
+            // 现在 label 不变， title 应该只存选中的 tag。
+            // 如果没选 tag，是否要存 '感悟'？
+            // 假设用户想用 tag 作为分类，如果没选，存空或者存默认title可能比较好。
+            // 兼容旧逻辑：如果没有选中chip，且原来有 title，是否保留？
+            // 这里简单处理：如果有选中chip，存chip名；否则存空字符串（或者存默认title作为fallback?）
+            // 根据"label不需要这个内容"，说明label只是静态展示。
+            // 建议：如果没选，title 为空。
+            
             if (!dailyReviews[today]) dailyReviews[today] = {};
             dailyReviews[today].great = great;
             dailyReviews[today].improve = improve;
             dailyReviews[today].insight = insight;
+            if (title) dailyReviews[today].title = title;
+            // 注意：如果用户取消选择（目前没有取消逻辑，点击即选中），title会更新。
             
             localStorage.setItem('habit_daily_reviews_v1', JSON.stringify(dailyReviews));
             triggerAutoSave();
@@ -2767,6 +2954,164 @@
         } catch (e) {
             console.error('saveCheckinModalDailyReview error:', e);
         }
+    }
+
+    // 切换modal中的历史打卡显示
+    let isCheckinModalHistoryCheckinOpen = false;
+    function toggleCheckinModalHistoryCheckin() {
+        const area = document.getElementById('checkinModalHistoryCheckinArea');
+        // 输入区域包含：card-title下的input-group, row(sleep/wake), study, penalty
+        // 简单处理：将 checkinModalCheckinArea 下除了 card-title 和 historyArea 之外的元素隐藏/显示
+        // 或者更简单：给输入部分包一个 div。但现在的 HTML 结构比较散。
+        // 观察结构：checkinModalCheckinArea -> card -> [card-title, input-group, row, input-group, penaltyArea, historyArea]
+        // 我们需要隐藏的是 card-title 之后的输入部分，直到 historyArea 之前。
+        
+        const card = document.querySelector('#checkinModalCheckinArea .card');
+        if (!card) return;
+        
+        // 获取所有子元素
+        const children = Array.from(card.children);
+        const title = card.querySelector('.card-title');
+        const historyArea = document.getElementById('checkinModalHistoryCheckinArea');
+        
+        isCheckinModalHistoryCheckinOpen = !isCheckinModalHistoryCheckinOpen;
+        
+        children.forEach(child => {
+            if (child === title || child === historyArea) return;
+            // 隐藏/显示其他元素
+            child.style.display = isCheckinModalHistoryCheckinOpen ? 'none' : 'block'; // 注意：row是flex布局，直接设block可能破坏样式。
+            // 更好的方式：如果原来是flex，要恢复flex。但row类定义了display:flex吗？
+            // 看前面代码：<div class="row">...</div> usually implies flex in frameworks, but here let's check.
+            // 在 index.html 头部可能有 .row { display: flex; gap: 10px; }
+            // 简单起见，如果 child 包含 row class，恢复时设为 flex，否则 block。
+            if (!isCheckinModalHistoryCheckinOpen) {
+                 if (child.classList.contains('row')) child.style.display = 'flex';
+                 else if (child.id === 'checkinModalPenaltyReasonBox') {
+                     // 特殊处理原因框，只有当有惩罚时才显示？或者保持原样
+                     // 这里的隐藏是针对"切换到历史模式"，恢复时应该恢复到"输入模式"。
+                     // 输入模式下，reasonBox 是根据逻辑显示的。
+                     // 简单粗暴：恢复显示时，全部设为 '' (remove inline display style)，让 CSS class 控制？
+                     // 但是 row 是 div，默认 block，如果有 css .row { display: flex } 就可以。
+                     child.style.display = ''; 
+                     // 对于 penaltyReasonBox，它默认是 none。如果仅仅 remove inline style，它会变回 none (assuming it has style="display:none" initially or in css).
+                     // 只要 checkCheckinModalPenaltyChange 会被调用，状态就会修正。
+                 } else {
+                     child.style.display = '';
+                 }
+            } else {
+                child.style.display = 'none';
+            }
+        });
+        
+        if (isCheckinModalHistoryCheckinOpen) {
+            if (historyArea) historyArea.style.display = 'block';
+            renderCheckinModalHistoryCheckin();
+        } else {
+            if (historyArea) historyArea.style.display = 'none';
+            // 恢复时，重新计算一下界面状态（如惩罚框是否显示）
+            checkCheckinModalPenaltyChange();
+        }
+    }
+
+    // 渲染modal中的历史打卡列表
+    function renderCheckinModalHistoryCheckin() {
+        const list = document.getElementById('checkinModalHistoryCheckinList');
+        if (!list) return;
+        
+        let data = [];
+        // 使用全局 historyData 变量
+        if (typeof historyData !== 'undefined' && Array.isArray(historyData)) {
+            // 筛选出晨间打卡记录 (通常包含 sleep 或 wake 信息，或者 type='checkin')
+            data = historyData.filter(r => r.details && (r.details.type === 'checkin' || r.details.sleep || r.details.wake));
+        } else {
+            // 尝试读取 localStorage 作为后备
+            try {
+                const stored = localStorage.getItem('habit_history_v1'); // 注意版本号可能不同，但通常用 historyData
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    data = parsed.filter(r => r.details && (r.details.type === 'checkin' || r.details.sleep || r.details.wake));
+                }
+            } catch(e) {}
+        }
+        
+        // 按日期倒序
+        data.sort((a, b) => b.date.localeCompare(a.date));
+        
+        if (data.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:var(--text-sub); padding:20px;">暂无打卡记录</div>';
+            return;
+        }
+
+        list.innerHTML = data.map(item => {
+            // item结构: { date: "...", details: { sleep: "...", wake: "...", study: "..." } }
+            const d = item.details || {};
+            const studyTime = parseFloat(d.study || 0).toFixed(1);
+            const wakeTime = d.wake || '--:--';
+            const sleepTime = d.sleep || '--:--';
+            
+            return `
+                <div class="history-item" style="padding:10px 0; border-bottom:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="loadCheckinModalCheckin('${item.date}'); toggleCheckinModalHistoryCheckin();">
+                    <div style="font-weight:600; color:var(--text-main); font-size:14px;">${item.date.slice(5)}</div>
+                    <div style="display:flex; gap:12px; font-size:12px; color:var(--text-sub);">
+                        <span>🌅 ${wakeTime}</span>
+                        <span>🛌 ${sleepTime}</span>
+                        <span style="color:var(--primary); font-weight:600;">⏱️ ${studyTime}h</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // 加载历史打卡数据到表单 (用于查看或修改)
+    function loadCheckinModalCheckin(date) {
+        // 找到对应的数据
+        let item = null;
+        if (typeof historyData !== 'undefined' && Array.isArray(historyData)) {
+             item = historyData.find(r => r.date === date && r.details && (r.details.type === 'checkin' || r.details.sleep || r.details.wake));
+        }
+        
+        if (!item) return;
+        const d = item.details || {};
+        
+        // 填充表单
+        const dateInput = document.getElementById('checkinModalDateInput');
+        const sleepInput = document.getElementById('checkinModalSleepInput');
+        const wakeInput = document.getElementById('checkinModalWakeInput');
+        const studyInput = document.getElementById('checkinModalStudyInput');
+        const penaltyAmount = document.getElementById('checkinModalPenaltyAmount');
+        const penaltyReason = document.getElementById('checkinModalPenaltyReason');
+        
+        if (dateInput) dateInput.value = item.date;
+        if (sleepInput) sleepInput.value = d.sleep || '';
+        if (wakeInput) wakeInput.value = d.wake || '';
+        if (studyInput) studyInput.value = d.study || '';
+        
+        // 恢复金额和原因（如果有）
+        // 注意：historyData 中的 fund 是正数表示收入，负数表示支出（惩罚）
+        // 这里 item.fund 是总金额变动。晨间打卡可能有奖励也可能有惩罚。
+        // 如果是惩罚，fund 为负数。
+        // checkinModalPenaltyAmount 显示的是"金额(元)"，通常输入正数表示扣款？
+        // 看 UI 逻辑：<label>金额 (元)</label> placeholder="0"
+        // 之前逻辑 calculateCheckinModalPenalty 会设置 value 为负数 (例如 -3.00)
+        // 所以这里应该直接回填 item.fund
+        
+        if (penaltyAmount) penaltyAmount.value = item.fund !== undefined ? item.fund : '';
+        // 原因可能在 details.reason 或者 item.title? 
+        // 通常 reason 存在 details 中吗？ saveRecord 时 details: { ... }
+        // 检查 submitForm 逻辑，reason 可能被存入 details.reason 或 details.fundReason
+        // 假设存在 details.reason
+        if (penaltyReason) penaltyReason.value = d.reason || '';
+        
+        // 触发变更计算
+        checkCheckinModalDateChange(); 
+        // calculateCheckinModalPenalty(); // 加载历史时不应该重新计算惩罚，应该保留历史记录的值
+        // 但是如果用户修改了时间，需要重新计算吗？
+        // 用户意图可能是查看，也可能是修改。
+        // 如果只是查看，不应自动改变金额。
+        // 如果用户修改了时间，onchange 事件会触发 calculateCheckinModalPenalty。
+        // 所以这里不主动调用 calculate，除非为了更新 UI 状态（如显示原因框）
+        
+        checkCheckinModalPenaltyChange(); // 这会根据金额显示/隐藏原因框
     }
 
     // 切换modal中的历史复盘显示
@@ -3134,6 +3479,12 @@
             container.innerHTML = '<div style="text-align:center;color:var(--text-sub);padding:20px;">暂无计时记录</div>';
             return;
         }
+
+        // 按时间倒序排序（近期在前）
+        timerRecords.sort((a, b) => {
+            if (a.date !== b.date) return b.date.localeCompare(a.date);
+            return b.time.localeCompare(a.time);
+        });
 
         const limit = timerFullView ? timerRecords.length : (config.timerLimit || 5);
         const displayedRecords = timerRecords.slice(0, limit);
@@ -4377,6 +4728,14 @@
     function deleteTodo(id) {
         if(!confirm("删除此待办？")) return;
         isDeleting = true;
+        
+        // 记录删除的ID，用于多端同步
+        if (typeof deletedTodoIds === 'undefined') deletedTodoIds = [];
+        deletedTodoIds.push(String(id));
+        // 限制删除记录的大小，防止无限增长
+        if (deletedTodoIds.length > 500) deletedTodoIds = deletedTodoIds.slice(-500);
+        localStorage.setItem('habit_deleted_todo_ids_v1', JSON.stringify(deletedTodoIds));
+        
         todoList = todoList.filter(t => String(t.id) !== String(id));
         localStorage.setItem('habit_todos_v1', JSON.stringify(todoList));
         const el = document.getElementById(`todo-row-${id}`);
@@ -5406,6 +5765,8 @@
                 wChange = parseFloat(record.details.wallet_change);
             } else if (record.title === "💰 愿望金手动调节" && record.fund !== undefined) {
                 wChange = parseFloat(record.fund);
+            } else if (record.details && record.details.type === 'checkin' && record.fund > 0) {
+                wChange = parseFloat(record.fund);
             }
             if (wChange && !isNaN(wChange)) {
                 let currentWallet = getWallet();
@@ -5420,6 +5781,8 @@
                 dChange = parseFloat(record.details.debt_change);
             } else if (record.title === "💸 待罚金手动调节" && record.fund !== undefined) {
                 dChange = parseFloat(record.fund);
+            } else if (record.details && record.details.type === 'checkin' && record.fund < 0) {
+                dChange = Math.abs(parseFloat(record.fund));
             }
             if (dChange && !isNaN(dChange)) {
                 let currentDebt = getDebt();
@@ -7052,6 +7415,12 @@
             return;
         }
 
+        // 按时间倒序排序（近期在前）
+        timerRecords.sort((a, b) => {
+            if (a.date !== b.date) return b.date.localeCompare(a.date);
+            return b.time.localeCompare(a.time);
+        });
+
         const limit = timerFullView ? timerRecords.length : (config.timerLimit || 5);
         const displayedRecords = timerRecords.slice(0, limit);
 
@@ -7534,6 +7903,106 @@
         syncGitHub('push', true);
     }
 
+    // 渲染复盘标签设置
+    function renderReviewTagSettings() {
+        // 尝试从设置模态框和主页面查找元素，确保在任何视图下都能更新
+        const listIds = ['settingReviewTagsList']; // 如果有多个可能的ID，可以添加到这里
+        const titleIds = ['settingReviewTagTitle'];
+
+        // 查找所有匹配的元素进行更新（处理可能存在的多个实例，例如一个在Modal中，一个在主页面中）
+        // 实际上 ID 应该是唯一的，但如果 Settings Modal 是动态插入的，可能要注意查找范围
+        
+        // 优先查找 Settings Modal 中的内容
+        const settingsModal = document.getElementById('settingsModal');
+        const isSettingsModalOpen = settingsModal && settingsModal.classList.contains('show');
+        const settingsModalContent = isSettingsModalOpen ? document.getElementById('settingsModalContent') : null;
+
+        let list = document.getElementById('settingReviewTagsList');
+        let titleInput = document.getElementById('settingReviewTagTitle');
+        
+        if (isSettingsModalOpen && settingsModalContent) {
+            const modalList = settingsModalContent.querySelector('#settingReviewTagsList');
+            const modalTitle = settingsModalContent.querySelector('#settingReviewTagTitle');
+            if (modalList) list = modalList;
+            if (modalTitle) titleInput = modalTitle;
+        }
+
+        if (titleInput) {
+            titleInput.value = config.reviewTagTitle || '感悟';
+        }
+        
+        if (list) {
+            list.innerHTML = (config.reviewTags || []).map((tag, i) => `
+                <div class="chip" style="display:inline-flex; align-items:center; gap:4px;">
+                    ${tag}
+                    <span style="cursor:pointer; opacity:0.6; font-size:14px; margin-left:4px;" onclick="deleteReviewTag(${i})">✕</span>
+                </div>
+            `).join('');
+        }
+    }
+
+    // 添加复盘标签
+    function addReviewTagSetting() {
+        showModal({
+            title: '添加复盘标签',
+            message: '请输入新的复盘标签内容',
+            inputs: [{ id: 'newTag', label: '标签内容', placeholder: '例如：🛍️ 购物' }],
+            buttons: [
+                { text: '取消', primary: false, callback: () => {} },
+                { 
+                    text: '确定', 
+                    primary: true, 
+                    callback: (values) => {
+                        const tag = values.newTag ? values.newTag.trim() : '';
+                        if (!tag) return;
+                        if (!config.reviewTags) config.reviewTags = [];
+                        if (!config.reviewTags.includes(tag)) {
+                            config.reviewTags.push(tag);
+                            renderReviewTagSettings();
+                        }
+                    }
+                }
+            ]
+        });
+    }
+
+    // 删除复盘标签
+    function deleteReviewTag(index) {
+        if (!config.reviewTags) return;
+        config.reviewTags.splice(index, 1);
+        renderReviewTagSettings();
+    }
+
+    // 重置复盘标签
+    function resetReviewTags() {
+        if(confirm('确定要恢复默认的复盘标签设置吗？')) {
+            config.reviewTags = [...DEFAULT_CONFIG.reviewTags];
+            config.reviewTagTitle = DEFAULT_CONFIG.reviewTagTitle;
+            renderReviewTagSettings();
+        }
+    }
+    
+    // 保存复盘设置
+    function saveReviewSettings() {
+        const titleInput = document.getElementById('settingReviewTagTitle');
+        if (titleInput) {
+            const title = titleInput.value.trim();
+            if (title) {
+                config.reviewTagTitle = title;
+            } else {
+                alert('标题不能为空');
+                return;
+            }
+        }
+        
+        localStorage.setItem('habit_config_v7', JSON.stringify(config));
+        triggerAutoSave();
+        alert('复盘设置已保存');
+        
+        // 刷新可能打开的打卡界面
+        loadCheckinModalReview(getLocalTodayStr());
+    }
+
     function saveSettings(){
         // 优先从modal中查找元素（如果modal是打开的）
         const settingsModal = document.getElementById('settingsModal');
@@ -7574,6 +8043,8 @@
             },
             weekend: config.weekend || [0, 6],
             todoTimeChips: config.todoTimeChips || [],
+            reviewTags: config.reviewTags || DEFAULT_CONFIG.reviewTags,
+            reviewTagTitle: config.reviewTagTitle || DEFAULT_CONFIG.reviewTagTitle,
             interface: config.interface || DEFAULT_CONFIG.interface
         };
         localStorage.setItem('habit_config_v7', JSON.stringify(config));
@@ -7617,6 +8088,7 @@
 
         renderQuickTaskSettings();
         renderTodoTimeChipSettings();
+        renderReviewTagSettings();
         applyInterfaceSettings();
 
         // 填充手动调节数值
@@ -8582,6 +9054,8 @@
                         localStorage.setItem('habit_pinned_task_id', pinnedTaskId);
                     }
                     if(cloudData.timeBank !== undefined) timeBank = cloudData.timeBank;
+                    if(cloudData.wallet !== undefined) setWallet(cloudData.wallet);
+                    if(cloudData.debt !== undefined) setDebt(cloudData.debt);
                     
                     // 同步计时器状态
                     const hadLocalTimer = localStorage.getItem('habit_timer_state_v1') !== null;
@@ -8653,9 +9127,12 @@
                     data: stripImagesFromHistory(historyData),
                     config,
                     todos: todoList,
+                    deletedTodoIds: typeof deletedTodoIds !== 'undefined' ? deletedTodoIds : [],
                     wishes: wishList,
                     strategies: userStrategies,
                     timeBank: timeBank,
+                    wallet: getWallet(),
+                    debt: getDebt(),
                     timerRecords: timerRecords,
                     plannedTasks: plannedTasks,
                     dailyReviews: dailyReviews,
@@ -8698,6 +9175,7 @@
                             // 使用合并后的数据重新推送
                             content.data = stripImagesFromHistory(historyData);
                             content.todos = todoList;
+                            content.deletedTodoIds = typeof deletedTodoIds !== 'undefined' ? deletedTodoIds : [];
                             content.wishes = wishList;
                             content.strategies = userStrategies;
                             content.timerRecords = timerRecords;
@@ -8768,6 +9246,7 @@
                             data: stripImagesFromHistory(historyData),
                             config,
                             todos: todoList,
+                            deletedTodoIds: typeof deletedTodoIds !== 'undefined' ? deletedTodoIds : [],
                             wishes: wishList,
                             strategies: userStrategies,
                             timeBank: timeBank,
