@@ -499,22 +499,38 @@
             margin-bottom: 8px; font-weight: 600;
         }
         
-        /* 界面显示配置复选框样式 */
-        .interface-option {
-            display: flex; align-items: center; gap: 12px;
-            padding: 14px 16px; background: var(--input-bg);
-            border-radius: 12px; cursor: pointer;
+        /* Global custom checkbox styling */
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
             border: 2px solid var(--border);
-            transition: all 0.2s ease;
+            border-radius: 6px;
+            background-color: var(--input-bg);
+            cursor: pointer;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            vertical-align: middle;
         }
-        .interface-option:hover {
-            background: var(--border);
-            transform: translateX(2px);
+
+        input[type="checkbox"]:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+            background-size: 14px;
+            background-position: center;
+            background-repeat: no-repeat;
         }
-        .interface-option.checked {
-            background: var(--success-bg);
-            border-color: var(--success);
+
+        input[type="checkbox"]:checked::after {
+            content: none;
         }
+        
+        /* 界面显示配置复选框样式 - Special override */
         .interface-option input[type="checkbox"] {
             position: absolute;
             opacity: 0;
@@ -548,6 +564,8 @@
             margin-bottom: 20px;
             animation: fadeIn 0.3s ease;
         }
+
+
     </style>
 </head>
 <body onclick="if(event.target.id === 'todoSelectModal') closeTodoSelectModal(); else closeAllMenus(event);">
@@ -843,6 +861,13 @@
                     <input type="number" id="exchangeRate" value="5">
                 </div>
             </div>
+            
+            <div class="row" style="margin-bottom:12px;">
+                <div class="input-group" style="padding:12px; border-radius:12px; border:1px solid var(--border); margin-bottom:0; width: 100%;">
+                    <label class="input-label" style="margin-bottom:4px;">愿望兑换 (币/金)</label>
+                    <input type="number" id="wishToDebtRate" value="2">
+                </div>
+            </div>
 
             <div style="font-size:12px; font-weight:700; color:var(--danger); margin:15px 0 8px 0; text-transform:uppercase;">惩罚阶梯</div>
             <div class="row" style="margin-bottom:10px;">
@@ -1112,7 +1137,7 @@
                     <div class="row">
                         <div class="input-group">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <label class="input-label" style="margin-bottom:0">入睡 <span id="checkinModalTargetSleep" style="opacity:0.6;font-weight:normal"></span></label>
+                                <label class="input-label" style="margin-bottom:0">入睡 <span id="checkinModalTargetSleep" style="opacity:0.6;font-weight:normal"></span> <span id="checkinModalSleepDayIndicator" style="font-size:10px; margin-left:5px; padding:1px 4px; border-radius:4px; display:none;"></span></label>
                                 <span class="btn-mini" style="background:var(--time); color:#fff; padding:2px 6px; font-size:10px;" onclick="setInputToNow('checkinModalSleepInput'); calculateCheckinModalPenalty();">此刻</span>
                             </div>
                             <input type="time" id="checkinModalSleepInput" value="00:00" onchange="calculateCheckinModalPenalty()" oninput="calculateCheckinModalPenalty()">
@@ -1127,6 +1152,11 @@
                     </div>
                     <div class="input-group"><label class="input-label">专注 (h)</label><input type="number" step="0.1" id="checkinModalStudyInput" placeholder="时长" oninput="calculateCheckinModalPenalty()"></div>
                     
+                    <div class="input-group" id="useTimeBankGroup" style="display:none; align-items: center; justify-content: space-between; margin-top: 8px;">
+                        <label class="input-label" style="margin-bottom:0; cursor:pointer;" for="useTimeBankCheckbox">使用时间银行抵扣 (<span id="timeBankBalanceDisplay">0</span>h)</label>
+                        <input type="checkbox" id="useTimeBankCheckbox" onchange="calculateCheckinModalPenalty(); updateTimeBankCheckboxStyle();" style="width:20px; height:20px;">
+                    </div>
+
                     <div id="checkinModalPenaltyArea" style="margin-top:15px; border-top:1px solid var(--border); padding-top:15px;">
                         <div class="input-group">
                             <label class="input-label" id="checkinModalAmountLabel">金额 (元)</label>
@@ -2716,6 +2746,11 @@
             if (savedDraft) {
                 try {
                     const draft = JSON.parse(savedDraft);
+                    // 逻辑修改：即使日期不匹配，如果用户手动记录了草稿，可能希望恢复
+                    // 或者我们应该判断，如果草稿日期是昨天，且今天是今天，是否应该提示？
+                    // 简单起见，如果 draft 存在，我们看看是否可以恢复一些字段
+                    
+                    // 如果草稿日期和当前选择日期一致，完全恢复
                     if (draft.date === today) {
                         if (draft.sleep) document.getElementById('checkinModalSleepInput').value = draft.sleep;
                         if (draft.wake) document.getElementById('checkinModalWakeInput').value = draft.wake;
@@ -2723,7 +2758,17 @@
                         if (draft.penalty) document.getElementById('checkinModalPenaltyAmount').value = draft.penalty;
                         if (draft.reason) document.getElementById('checkinModalPenaltyReason').value = draft.reason;
                         draftRestored = true;
-                        console.log('已恢复打卡草稿');
+                        console.log('已恢复今日打卡草稿');
+                    } else {
+                        // 如果草稿日期不是今天（比如是昨天），但用户可能只想恢复入睡时间
+                        // 场景：昨天晚上填了入睡时间（对应昨天），今天早上打开（日期默认为今天）
+                        // 此时草稿里的 date 是昨天。
+                        // 我们应该检查，如果 draft.sleep 存在，是否自动填充到 sleepInput？
+                        // 通常入睡时间是昨晚的，所以如果草稿里有 sleep，且当前 sleepInput 为空，可以尝试填充
+                        if (draft.sleep && !document.getElementById('checkinModalSleepInput').value) {
+                            document.getElementById('checkinModalSleepInput').value = draft.sleep;
+                            console.log('已从过往草稿恢复入睡时间');
+                        }
                     }
                 } catch(e) { console.error('草稿恢复失败', e); }
             }
@@ -3225,9 +3270,11 @@
                 // 奖惩设置
                 const rewardAmount = modalDoc.querySelector('#rewardAmount');
                 const exchangeRate = modalDoc.querySelector('#exchangeRate');
+                const wishToDebtRate = modalDoc.querySelector('#wishToDebtRate');
                 
                 if (rewardAmount) rewardAmount.value = config.reward || 5;
                 if (exchangeRate) exchangeRate.value = config.exchangeRate || 5;
+                if (wishToDebtRate) wishToDebtRate.value = config.wishToDebtRate || 2;
                 
                 // 惩罚阶梯
                 if (config.penalties) {
@@ -3510,6 +3557,7 @@
                 return `
                 <div class="inline-editor">
                     <div class="input-group"><label class="input-label">任务名称</label><input type="text" id="editHistoryName-${r.id}" value="${formatTaskName(r.name)}" style="font-weight:bold;"></div>
+                    <div class="input-group"><label class="input-label">日期</label><input type="date" id="editHistoryDate-${r.id}" value="${r.date}"></div>
                     <div class="row">
                         <div class="input-group"><label class="input-label">起始时间</label><input type="time" id="editHistoryStart-${r.id}" value="${startTime}"></div>
                         <div class="input-group"><label class="input-label">结束时间</label><input type="time" id="editHistoryEnd-${r.id}" value="${r.time}"></div>
@@ -3723,9 +3771,55 @@
         }
     }
 
+    function updateTimeBankCheckboxStyle() {
+        const checkbox = document.getElementById('useTimeBankCheckbox');
+        const group = document.getElementById('useTimeBankGroup');
+        if (checkbox && group) {
+            if (checkbox.checked) {
+                group.style.background = 'var(--time-bg)';
+                group.style.border = '1px solid var(--time)';
+                group.style.borderRadius = '8px';
+                group.style.padding = '8px';
+                group.querySelector('label').style.color = 'var(--time)';
+                group.querySelector('label').style.fontWeight = 'bold';
+            } else {
+                group.style.background = 'transparent';
+                group.style.border = 'none';
+                group.style.padding = '0';
+                group.querySelector('label').style.color = 'var(--text-main)';
+                group.querySelector('label').style.fontWeight = 'normal';
+            }
+        }
+    }
+
     function calculateCheckinModalPenalty() {
         // 实时保存草稿
         saveCheckinDraft();
+        
+        // 更新样式
+        updateTimeBankCheckboxStyle();
+
+        // 更新入睡时间日期指示器 (昨日/今日)
+        const sleepInput = document.getElementById('checkinModalSleepInput');
+        const sleepIndicator = document.getElementById('checkinModalSleepDayIndicator');
+        if (sleepInput && sleepIndicator) {
+            if (sleepInput.value) {
+                const [h, m] = sleepInput.value.split(':').map(Number);
+                sleepIndicator.style.display = 'inline-block';
+                // 12:00之前算今日凌晨，12:00之后算昨日
+                if (h < 12) {
+                    sleepIndicator.innerText = '今日';
+                    sleepIndicator.style.background = 'var(--time)'; 
+                    sleepIndicator.style.color = '#fff';
+                } else {
+                    sleepIndicator.innerText = '昨日';
+                    sleepIndicator.style.background = '#9e9e9e'; // Gray
+                    sleepIndicator.style.color = '#fff';
+                }
+            } else {
+                sleepIndicator.style.display = 'none';
+            }
+        }
 
         // 实时计算惩罚金
         const modalDate = document.getElementById('checkinModalDateInput');
@@ -3803,26 +3897,56 @@
         const studyDiff = studyVal - requiredStudy;
         tempTimeDiff = studyDiff;
         
+        // Time Bank logic elements
+        const useTimeBankGroup = document.getElementById('useTimeBankGroup');
+        const useTimeBankCheckbox = document.getElementById('useTimeBankCheckbox');
+        const timeBankDisplay = document.getElementById('timeBankBalanceDisplay');
+
         if (studyDiff < 0) {
             // 学习时间不足
             const shortageHours = Math.abs(studyDiff); // 少学的小时数
+            let applyPenalty = true;
             
-            // 根据少学时间判断惩罚阶梯
-            if (shortageHours < 1) {
-                // 少学时间 < 1小时，使用"学习<1h"的固定惩罚
-                const studyPenalty = parseFloat(p.studyS) || 0;
-                penalty += studyPenalty;
-                if (studyPenalty > 0) {
-                    reasons.push(`少学${shortageHours.toFixed(1)}h (<1h): -${studyPenalty}元`);
-                }
+            // Check if Time Bank has enough balance
+            if (useTimeBankGroup && timeBank >= shortageHours) {
+                 useTimeBankGroup.style.display = 'flex';
+                 if (timeBankDisplay) timeBankDisplay.innerText = timeBank.toFixed(1);
+                 
+                 if (useTimeBankCheckbox && useTimeBankCheckbox.checked) {
+                     useTimeBank = true; // Mark as used
+                     reasons.push(`使用时间银行抵扣${shortageHours.toFixed(1)}h`);
+                     applyPenalty = false;
+                 } else {
+                     useTimeBank = false;
+                 }
             } else {
-                // 少学时间 ≥ 1小时，使用"学习≥1h"的固定惩罚
-                const studyPenalty = parseFloat(p.studyL) || 0;
-                penalty += studyPenalty;
-                if (studyPenalty > 0) {
-                    reasons.push(`少学${shortageHours.toFixed(1)}h (≥1h): -${studyPenalty}元`);
+                 if (useTimeBankGroup) useTimeBankGroup.style.display = 'none';
+                 if (useTimeBankCheckbox) useTimeBankCheckbox.checked = false;
+                 useTimeBank = false;
+            }
+
+            if (applyPenalty) {
+                // 根据少学时间判断惩罚阶梯
+                if (shortageHours < 1) {
+                    // 少学时间 < 1小时，使用"学习<1h"的固定惩罚
+                    const studyPenalty = parseFloat(p.studyS) || 0;
+                    penalty += studyPenalty;
+                    if (studyPenalty > 0) {
+                        reasons.push(`少学${shortageHours.toFixed(1)}h (<1h): -${studyPenalty}元`);
+                    }
+                } else {
+                    // 少学时间 ≥ 1小时，使用"学习≥1h"的固定惩罚
+                    const studyPenalty = parseFloat(p.studyL) || 0;
+                    penalty += studyPenalty;
+                    if (studyPenalty > 0) {
+                        reasons.push(`少学${shortageHours.toFixed(1)}h (≥1h): -${studyPenalty}元`);
+                    }
                 }
             }
+        } else {
+            if (useTimeBankGroup) useTimeBankGroup.style.display = 'none';
+            if (useTimeBankCheckbox) useTimeBankCheckbox.checked = false;
+            useTimeBank = false;
         }
         // 注意：如果 studyDiff >= 0（学习时间达标或超过），不计算惩罚
         // 超过的时间会存入时间银行（在其他地方处理）
@@ -3977,14 +4101,28 @@
         const requiredStudy = parseFloat(config.study) || 0;
         let timeBankChange = 0;
         
-        if (studyVal !== null && !isNaN(studyVal) && studyVal > requiredStudy) {
-            // 学习时长超过要求时间，计算多余的时间
-            const extraHours = studyVal - requiredStudy;
-            timeBankChange = extraHours;
-            
-            // 存入时间银行
-            timeBank += extraHours;
-            localStorage.setItem('habit_time_bank_v1', timeBank);
+        // Time Bank logic for deduction
+        const useTimeBankCheckbox = document.getElementById('useTimeBankCheckbox');
+
+        if (studyVal !== null && !isNaN(studyVal)) {
+            if (studyVal > requiredStudy) {
+                // 学习时长超过要求时间，计算多余的时间
+                const extraHours = studyVal - requiredStudy;
+                timeBankChange = extraHours;
+                
+                // 存入时间银行
+                timeBank += extraHours;
+                localStorage.setItem('habit_time_bank_v1', timeBank);
+            } else if (studyVal < requiredStudy && useTimeBankCheckbox && useTimeBankCheckbox.checked) {
+                // 学习时长不足，且用户选择使用时间银行抵扣
+                const shortageHours = requiredStudy - studyVal;
+                // Double check balance
+                if (timeBank >= shortageHours) {
+                    timeBankChange = -shortageHours;
+                    timeBank -= shortageHours;
+                    localStorage.setItem('habit_time_bank_v1', timeBank);
+                }
+            }
         }
         
         // 构建记录数据：正数表示奖励，负数表示惩罚
@@ -4002,6 +4140,9 @@
         if (timeBankChange > 0) {
             details.time_bank_change = `+${timeBankChange.toFixed(1)}h`;
             details.note = `学习时长超过要求 ${timeBankChange.toFixed(1)}h，已存入时间银行`;
+        } else if (timeBankChange < 0) {
+            details.time_bank_change = `${timeBankChange.toFixed(1)}h`;
+            details.note = `学习时长不足 ${Math.abs(timeBankChange).toFixed(1)}h，使用时间银行抵扣`;
         }
         
         // 保存记录
@@ -4022,7 +4163,7 @@
         }
         
         // 更新时间银行显示
-        if (timeBankChange > 0) {
+        if (timeBankChange !== 0) {
             updateUI();
         }
         
@@ -4980,9 +5121,25 @@
         
         const list = getEl('shopList');
         if (!list) return;
-        if (wishList.length === 0) { list.innerHTML = '<div style="color:var(--text-sub);text-align:center;padding:30px;">愿望清单空空如也</div>'; return; }
 
-        list.innerHTML = wishList.map((item, idx) => {
+        // 注入公益金抵扣兑换项
+        const rate = config.wishToDebtRate || 2;
+        const exchangeItem = `
+            <div class="list-item" style="background:rgba(255,193,7,0.05);">
+                <div style="flex:1">
+                    <div style="font-weight:bold;color:var(--text-main);">🛡️ 公益金抵扣</div>
+                    <div style="font-size:12px;color:var(--text-sub);opacity:0.8;">消耗 ${rate} 愿望金 / 抵 1 公益金</div>
+                </div>
+                <button class="btn-mini" style="background:var(--warning);color:#fff;" onclick="exchangeWishCoinForDebt()">兑换</button>
+            </div>
+        `;
+
+        if (wishList.length === 0) { 
+            list.innerHTML = exchangeItem + '<div style="color:var(--text-sub);text-align:center;padding:30px;">愿望清单空空如也</div>'; 
+            return; 
+        }
+
+        const itemsHtml = wishList.map((item, idx) => {
             const isHidden = item.hidden && isShopPrivacyOn;
             const nameDisplay = isHidden ? '******' : item.name;
             const btnState = isHidden ? 'disabled style="background:var(--border);cursor:not-allowed;"' : 'style="background:var(--warning);color:#fff;" onclick="buyItem(' + idx + ')"';
@@ -5011,6 +5168,47 @@
                 </div>
             </div>`;
         }).join('');
+        
+        list.innerHTML = exchangeItem + itemsHtml;
+    }
+
+    function exchangeWishCoinForDebt() {
+        const cost = config.wishToDebtRate || 2;
+        const benefit = 1;
+        const currentWallet = getWallet();
+        const currentDebt = getDebt();
+        
+        if (currentWallet < cost) {
+            alert(`愿望金不足！需要 ${cost} 元，当前只有 ${currentWallet} 元`);
+            return;
+        }
+        if (currentDebt <= 0) {
+            alert("当前没有待罚金，无需兑换！");
+            return;
+        }
+        
+        if(!confirm(`确认消耗 ${cost} 元愿望金抵扣 ${benefit} 元公益金？`)) return;
+        
+        // Deduct wallet
+        addWallet(-cost);
+        // Deduct debt (addDebt takes delta, so negative)
+        addDebt(-benefit);
+        
+        saveRecord({
+            fund: -cost,
+            title: '公益金抵扣',
+            theme: 'theme-warning',
+            details: { 
+                type: 'exchange_debt', 
+                wallet_change: -cost,
+                debt_change: -benefit,
+                note: `消耗 ${cost} 愿望金抵扣 ${benefit} 公益金`
+            }
+        }, false);
+        
+        calculateFunds();
+        renderShop();
+        alert("兑换成功！");
     }
 
     function moveWish(index, direction) {
@@ -5248,7 +5446,11 @@
         calculateFunds();
         if (timeBank < 0) timeBank = 0; // 确保时间银行不为负数
         document.getElementById('timeBankDisplay').innerText = (Number(timeBank) || 0).toFixed(1); // 更新时间银行显示
-
+        
+        // Update checkin modal time bank display
+        const timeBankBalanceDisplay = document.getElementById('timeBankBalanceDisplay');
+        if (timeBankBalanceDisplay) timeBankBalanceDisplay.innerText = (Number(timeBank) || 0).toFixed(1);
+        
         const list = document.getElementById('historyList');
         // 确保只更新主页面的historyList，不更新modal中的
         if (list && !list.closest('#debtModalContent')) {
@@ -5764,10 +5966,16 @@
         if(confirm("删除此记录？\n(注意：关联的数值调整将自动回滚)")){
             // 1. 回滚时间银行
             let tbChange = 0;
-            if (record.details && record.details.time_bank_change !== undefined) {
-                tbChange = parseFloat(record.details.time_bank_change);
+            if (record.details && record.details.time_bank_change_val !== undefined) {
+                tbChange = parseFloat(record.details.time_bank_change_val);
+            } else if (record.details && record.details.time_bank_change !== undefined) {
+                // 尝试从字符串中提取数值 (兼容旧数据)
+                const match = String(record.details.time_bank_change).match(/([+-]?[\d\.]+)/);
+                if (match) tbChange = parseFloat(match[1]);
+                else tbChange = parseFloat(record.details.time_bank_change);
             } else if (record.title === "⏳ 时间银行手动调节" && record.details && record.details.note) {
-                 tbChange = parseFloat(record.details.note.replace('h',''));
+                 const match = record.details.note.match(/([+-]?[\d\.]+)/);
+                 if (match) tbChange = parseFloat(match[1]);
             }
             if (tbChange && !isNaN(tbChange)) {
                 timeBank -= tbChange;
@@ -7447,6 +7655,7 @@
                 return `
                 <div class="inline-editor">
                     <div class="input-group"><label class="input-label">任务名称</label><input type="text" id="editHistoryName-${r.id}" value="${formatTaskName(r.name)}" style="font-weight:bold;"></div>
+                    <div class="input-group"><label class="input-label">日期</label><input type="date" id="editHistoryDate-${r.id}" value="${r.date}"></div>
                     <div class="row">
                         <div class="input-group"><label class="input-label">起始时间</label><input type="time" id="editHistoryStart-${r.id}" value="${startTime}"></div>
                         <div class="input-group"><label class="input-label">结束时间</label><input type="time" id="editHistoryEnd-${r.id}" value="${r.time}"></div>
@@ -7538,26 +7747,30 @@
         };
         
         const nameEl = getEl(`editHistoryName-${id}`);
+        const dateEl = getEl(`editHistoryDate-${id}`);
         const startEl = getEl(`editHistoryStart-${id}`);
         const endEl = getEl(`editHistoryEnd-${id}`);
         const noteEl = getEl(`editHistoryNote-${id}`);
         
-        if (!nameEl || !startEl || !endEl || !noteEl) {
+        if (!nameEl || !dateEl || !startEl || !endEl || !noteEl) {
             console.error('编辑输入框未找到');
             return;
         }
         
         const name = nameEl.value.trim();
+        const date = dateEl.value;
         const start = startEl.value;
         const end = endEl.value;
         const note = noteEl.value.trim();
 
         if (!name) return alert("请输入名称");
+        if (!date) return alert("请输入日期");
 
         const newDuration = getTimeDiff(start, end);
         if (!newDuration || newDuration < 0) return alert("时间设置不合法");
 
         r.name = formatTaskName(name);
+        r.date = date;
         r.startTime = start;
         r.time = end;
         r.duration = newDuration.toFixed(2);
@@ -8049,6 +8262,7 @@
             sleepW: getEl('setSleepW').value,
             reward: parseFloat(getEl('rewardAmount').value) || 0,
             exchangeRate: parseFloat(getEl('exchangeRate').value) || 5,
+            wishToDebtRate: parseFloat(getEl('wishToDebtRate').value) || 2,
             penalties: {
                 wakeS: parseFloat(getEl('pWakeS').value) || 0,
                 wakeL: parseFloat(getEl('pWakeL').value) || 0,
@@ -8088,6 +8302,8 @@
         document.getElementById('setSleepW').value = config.sleepW;
         document.getElementById('rewardAmount').value = config.reward;
         document.getElementById('exchangeRate').value = config.exchangeRate || 5;
+        const wishToDebtRateEl = document.getElementById('wishToDebtRate');
+        if (wishToDebtRateEl) wishToDebtRateEl.value = config.wishToDebtRate || 2;
 
         if(config.penalties) {
             document.getElementById('pWakeS').value = config.penalties.wakeS;
